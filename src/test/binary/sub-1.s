@@ -1,0 +1,3 @@
+li x1, 0x10
+li x2, 0x3A
+sub x8, x2, x1

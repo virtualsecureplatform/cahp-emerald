@@ -1,0 +1,4 @@
+asm.sh
+*.s
+*.o
+main

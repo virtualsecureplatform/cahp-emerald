@@ -1,0 +1,3 @@
+li x8, 0x20
+addi2 x8, 0x0A
+js 0
