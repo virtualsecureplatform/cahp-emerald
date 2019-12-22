@@ -27,39 +27,68 @@ class MainRegisterSpec extends ChiselFlatSpec{
   conf.debugMem = false
   conf.debugWb = false
   conf.test = true
-    assert(Driver(() => new MainRegister) {
-      c =>
-        new PeekPokeTester(c) {
-          /*
-          var testDataArray: Array[UInt] = Array.empty
-          poke(c.io.rs, 0.U)
-          poke(c.io.rd, 0.U)ホーム
-          for(i <- 0 until 16){
-            val v = Random.nextInt()&0xFFFF
-            val test_i = v.asUInt(16.W)
-            testDataArray = testDataArray :+ test_i
-            poke(c.io.writeEnable, true.B)
-            poke(c.io.writeReg, i.U(4.W))
-            poke(c.io.writeData, test_i)
-            step(1)
-          }
-          for(i <- 0 until 16){
-            val v = Random.nextInt()&0xFFFF
-            val test_i = v.asUInt(16.W)
-            poke(c.io.writeEnable, false.B)
-            poke(c.io.writeReg, i.U(4.W))
-            poke(c.io.writeData, test_i)
-            step(1)
-          }
-          for(i <- 0 until 16){
-            poke(c.io.rs, i.U(4.W))
-            expect(c.io.rsData, testDataArray(i))
-          }
-          for(i <- 0 until 16){
-            poke(c.io.rd, i.U(4.W))
-            expect(c.io.rdData, testDataArray(i))
-          }
-           */
+
+  behavior of "MainRegister Test"
+  it should "Save and Load same value" in {
+    Driver.execute(Array("--top-name=MainRegister"), () => new MainRegister){
+      c => new PeekPokeTester(c) {
+        poke(c.io.portA.writeEnable, false)
+        poke(c.io.portB.writeEnable, false)
+
+        //Test portA save and load
+        for(i <-0 until 16){
+          val testValue = Random.nextInt()&0xFFFF
+          poke(c.io.portA.writeEnable, true)
+          poke(c.io.portA.rd, i)
+          poke(c.io.portA.writeData, testValue)
+          step(1)
+          poke(c.io.portA.rs1, i)
+          poke(c.io.portA.rs2, i)
+          expect(c.io.portA.rs1Data, testValue)
+          expect(c.io.portA.rs2Data, testValue)
         }
-    })
+        poke(c.io.portA.writeEnable, false)
+
+        //Test portB save and load
+        for(i <-0 until 16){
+          val testValue = Random.nextInt()&0xFFFF
+          poke(c.io.portB.writeEnable, true)
+          poke(c.io.portB.rd, i)
+          poke(c.io.portB.writeData, testValue)
+          step(1)
+          poke(c.io.portB.rs1, i)
+          poke(c.io.portB.rs2, i)
+          expect(c.io.portB.rs1Data, testValue)
+          expect(c.io.portB.rs2Data, testValue)
+        }
+        poke(c.io.portB.writeEnable, false)
+
+        //Test save via portA and load via portB
+        for(i <-0 until 16){
+          val testValue = Random.nextInt()&0xFFFF
+          poke(c.io.portA.writeEnable, true)
+          poke(c.io.portA.rd, i)
+          poke(c.io.portA.writeData, testValue)
+          step(1)
+          poke(c.io.portB.rs1, i)
+          poke(c.io.portB.rs2, i)
+          expect(c.io.portB.rs1Data, testValue)
+          expect(c.io.portB.rs2Data, testValue)
+        }
+
+        //Test save via portB and load via portA
+        for(i <-0 until 16){
+          val testValue = Random.nextInt()&0xFFFF
+          poke(c.io.portB.writeEnable, true)
+          poke(c.io.portB.rd, i)
+          poke(c.io.portB.writeData, testValue)
+          step(1)
+          poke(c.io.portA.rs1, i)
+          poke(c.io.portA.rs2, i)
+          expect(c.io.portA.rs1Data, testValue)
+          expect(c.io.portA.rs2Data, testValue)
+        }
+      }
+    } should be (true)
+  }
 }
