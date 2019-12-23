@@ -30,7 +30,7 @@ class MainRegisterSpec extends ChiselFlatSpec{
 
   behavior of "MainRegister Test"
   it should "Save and Load same value" in {
-    Driver.execute(Array("--top-name=MainRegister"), () => new MainRegister){
+    Driver.execute(Array(""), () => new MainRegister){
       c => new PeekPokeTester(c) {
         poke(c.io.portA.writeEnable, false)
         poke(c.io.portB.writeEnable, false)
