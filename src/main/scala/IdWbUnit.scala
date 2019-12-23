@@ -75,7 +75,7 @@ class DecoderPort(implicit val conf:CAHPConfig) extends Bundle {
   val memOut = Flipped(new MemUnitIn)
   val wbOut = Flipped(new WbUnitIn)
 
-  val testImmType = if(conf.test) Output(UInt(9.W)) else Output(UInt(0.W))
+  val testImmType = if(conf.test) Output(UInt(4.W)) else Output(UInt(0.W))
   val testPCImmType = if(conf.test) Output(UInt(2.W)) else Output(UInt(0.W))
 }
 
@@ -87,15 +87,10 @@ object InstructionCategory {
 }
 
 object ImmType {
-  def SImm11:UInt  = "b000000001".U(9.W)
-  def SImm10:UInt  = "b000000010".U(9.W)
-  def SImm8:UInt   = "b000000100".U(9.W)
-  def UImm8:UInt   = "b000001000".U(9.W)
-  def UImm7:UInt   = "b000010000".U(9.W)
-  def SImm6:UInt   = "b000100000".U(9.W)
-  def UImm6:UInt   = "b001000000".U(9.W)
-  def Imm4:UInt    = "b010000000".U(9.W)
-  def Imm2:UInt    = "b100000000".U(9.W)
+  def SImm10:UInt  = "b0001".U(4.W)
+  def UImm7:UInt   = "b0010".U(4.W)
+  def SImm6:UInt   = "b0100".U(4.W)
+  def Imm2:UInt    = "b1000".U(4.W)
 }
 
 object PCImmType {
@@ -104,8 +99,8 @@ object PCImmType {
 }
 
 object PCOpcode {
-  def SImm10:UInt = "b001".U(3.W)
-  def SImm11:UInt = "b010".U(3.W)
+  def SImm10:UInt = "b01".U(2.W)
+  def SImm11:UInt = "b10".U(2.W)
 }
 
 class Decoder(implicit val conf:CAHPConfig) extends Module {
@@ -113,22 +108,12 @@ class Decoder(implicit val conf:CAHPConfig) extends Module {
   def genImm(inst:UInt, immType:UInt):UInt = {
     val imm = Wire(UInt(16.W))
     imm:=DontCare
-    when(immType === ImmType.SImm11){
-      imm := Cat(Fill(6, inst(7)), inst(6), inst(23, 16), 0.U(1.W))
-    }.elsewhen(immType === ImmType.SImm10){
+    when(immType === ImmType.SImm10){
       imm := Cat(Fill(7, inst(7)), inst(6), inst(23, 16))
-    }.elsewhen(immType === ImmType.SImm8){
-      imm := Cat(Fill(9, inst(23)), inst(22, 16))
-    }.elsewhen(immType === ImmType.UImm8){
-      imm := Cat(0.U(8.W), inst(23, 16))
     }.elsewhen(immType === ImmType.UImm7){
       imm := Cat(0.U(9.W), inst(7, 6), inst(15, 12), 0.U(1.W))
     }.elsewhen(immType === ImmType.SImm6){
       imm := Cat(Fill(11, inst(7)), inst(6), inst(15, 12))
-    }.elsewhen(immType === ImmType.UImm6){
-      imm := Cat(0.U(10.W), inst(7, 6), inst(15, 12))
-    }.elsewhen(immType === ImmType.Imm4){
-      imm := 4.U(16.W)
     }.elsewhen(immType === ImmType.Imm2){
       imm := 2.U(16.W)
     }
@@ -147,7 +132,7 @@ class Decoder(implicit val conf:CAHPConfig) extends Module {
   }
 
   def getImmType(inst:UInt):UInt = {
-    val immType = Wire(UInt(9.W))
+    val immType = Wire(UInt(5.W))
     immType := DontCare
     when(inst(0) === 1.U) {
       immType := ImmType.SImm10
@@ -159,11 +144,7 @@ class Decoder(implicit val conf:CAHPConfig) extends Module {
           immType := ImmType.SImm6
         }
       }.elsewhen(inst(2, 1) === InstructionCategory.InstI){
-        when(inst(5, 4) === 0.U){
-          immType := ImmType.SImm6
-        }.otherwise{
-          immType := ImmType.UImm6
-        }
+        immType := ImmType.SImm6
       }.elsewhen(inst(2, 1) === InstructionCategory.InstJ){
         immType := ImmType.Imm2
       }
@@ -400,12 +381,14 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
   }
   decoder.io.in := pIdReg
 
+  /*
   mainRegister.io.rs1 := decoder.io.rs1
   mainRegister.io.rs2 := decoder.io.rs2
   mainRegister.io.rd := io.wbIn.regWrite
   mainRegister.io.writeData := io.wbIn.regWriteData
   mainRegister.io.writeEnable := io.wbIn.regWriteEnable&&io.wbEnable
   mainRegister.io.testPC := io.wbIn.pc
+   */
 
   io.exOut := decoder.io.exOut
   io.exOut.pc := pIdReg.pc
@@ -419,7 +402,7 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
     //printf("RS1 FORWARD FROM MEM\n");
     rs1Data := io.memWbIn.regWriteData
   }.otherwise{
-    rs1Data := mainRegister.io.rs1Data
+    //rs1Data := mainRegister.io.rs1Data
   }
 
   when(decoder.io.rs2 === io.exWbIn.regWrite && io.exWbIn.regWriteEnable){
@@ -429,7 +412,7 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
     //printf("RS2 FORWARD FROM MEM\n");
     rs2Data := io.memWbIn.regWriteData
   }.otherwise{
-    rs2Data := mainRegister.io.rs2Data
+    //rs2Data := mainRegister.io.rs2Data
   }
 
   when((decoder.io.rs2 === io.exWbIn.regWrite||decoder.io.rs1 === io.exWbIn.regWrite) && io.exWbIn.regWriteEnable) {
@@ -482,7 +465,7 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
     io.exOut.pcOpcode := 0.U
   }
 
-  io.testRegx8 := mainRegister.io.testRegx8
+  //io.testRegx8 := mainRegister.io.testRegx8
   io.wbOut.pc := io.idIn.pc
   when(conf.debugId.B){
     printf("[ID] PC Address:0x%x\n", pIdReg.pc)
