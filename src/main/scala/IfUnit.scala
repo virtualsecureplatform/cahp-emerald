@@ -22,6 +22,44 @@ object romCacheStateType {
   val Loaded = 1.U(1.W)
 }
 
+class DependencySolverPort(implicit val conf:CAHPConfig) extends Bundle {
+  val instA = Input(UInt(24.W))
+  val instB = Input(UInt(24.W))
+  val execA = Output(Bool())
+  val execB = Output(Bool())
+}
+
+class DependencySolver(implicit val conf:CAHPConfig) extends Module {
+  val io = IO(new DependencySolverPort())
+
+  val instARegWrite = DecoderUtils.getRegWrite(io.instA)
+  val instBRegWrite = DecoderUtils.getRegWrite(io.instB)
+  val instARd = DecoderUtils.getRegRd(io.instA)
+  val instBRd = DecoderUtils.getRegRd(io.instB)
+
+
+  io.execA := true.B
+  when(io.instA(2,1) === InstructionCategory.InstJ){
+    io.execB := false.B
+  }.elsewhen(io.instA(2,1) === InstructionCategory.InstM){
+    when(io.instB(2,1) === InstructionCategory.InstM){
+      io.execB := false.B
+    }.otherwise{
+      when(instARegWrite && instBRegWrite && (instARd === instBRd)){
+        io.execB := false.B
+      }.otherwise{
+        io.execB := true.B
+      }
+    }
+  }.otherwise{
+    when(instARegWrite && instBRegWrite && (instARd === instBRd)){
+      io.execB := false.B
+    }.otherwise{
+      io.execB := true.B
+    }
+  }
+}
+
 class IfUnitIn(implicit val conf: CAHPConfig) extends Bundle {
   val romData = Input(UInt(32.W))
   val jumpAddress = Input(UInt(conf.romAddrWidth.W))

@@ -103,6 +103,33 @@ object PCOpcode {
   def SImm11:UInt = "b10".U(2.W)
 }
 
+object DecoderUtils {
+  def getRegWrite(inst:UInt): Bool = {
+    val regWrite = Wire(Bool())
+
+    when(inst(2,1) === InstructionCategory.InstM){
+      regWrite := inst(3) != 1.U
+    }.elsewhen(inst(2,1) === InstructionCategory.InstJ) {
+      regWrite := (inst(4) === 1.U) && (inst(0) === 0.U)
+    }.elsewhen(inst(7,0) === 0.U){
+      regWrite := false.B
+    }.otherwise{
+      regWrite := true.B
+    }
+    regWrite
+  }
+
+  def getRegRd(inst:UInt):UInt = {
+    val rd = Wire(UInt(4.W))
+    when(inst(2,1) === InstructionCategory.InstJ){
+      rd := 0.U(4.W)
+    }.otherwise{
+      rd := inst(11, 8)
+    }
+    rd
+  }
+}
+
 class Decoder(implicit val conf:CAHPConfig) extends Module {
 
   def genImm(inst:UInt, immType:UInt):UInt = {
@@ -266,20 +293,6 @@ class Decoder(implicit val conf:CAHPConfig) extends Module {
     signExt
   }
 
-  def getRegWrite(inst:UInt): Bool = {
-    val regWrite = Wire(Bool())
-
-    when(inst(2,1) === InstructionCategory.InstM){
-      regWrite := inst(3) != 1.U
-    }.elsewhen(inst(2,1) === InstructionCategory.InstJ) {
-      regWrite := (inst(4) === 1.U) && (inst(0) === 0.U)
-    }.elsewhen(inst(7,0) === 0.U){
-      regWrite := false.B
-    }.otherwise{
-      regWrite := true.B
-    }
-    regWrite
-  }
 
   def getInASel(inst:UInt): Bool = {
     val inASel = Wire(Bool())
@@ -357,7 +370,7 @@ class Decoder(implicit val conf:CAHPConfig) extends Module {
   }
 
   io.wbOut.regWrite := io.rd
-  io.wbOut.regWriteEnable := getRegWrite(io.in.inst)
+  io.wbOut.regWriteEnable := DecoderUtils.getRegWrite(io.in.inst)
   io.wbOut.regWriteData := DontCare
   io.wbOut.finishFlag := (io.in.inst(15,0) === 0xE.U)
   io.wbOut.pc := DontCare
