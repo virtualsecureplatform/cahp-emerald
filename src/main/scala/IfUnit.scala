@@ -35,27 +35,108 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
   val instARegWrite = DecoderUtils.getRegWrite(io.instA)
   val instBRegWrite = DecoderUtils.getRegWrite(io.instB)
   val instARd = DecoderUtils.getRegRd(io.instA)
-  val instBRd = DecoderUtils.getRegRd(io.instB)
+  val instBLong = io.instB(0) === 1.U
+
+  val instBRd = io.instB(11, 8)
+  val instBRs1 = io.instB(15, 12)
+  val instBRs2 = io.instB(19, 16)
 
 
   io.execA := true.B
+  io.execB := true.B
   when(io.instA(2,1) === InstructionCategory.InstJ){
     io.execB := false.B
   }.elsewhen(io.instA(2,1) === InstructionCategory.InstM){
     when(io.instB(2,1) === InstructionCategory.InstM){
       io.execB := false.B
     }.otherwise{
-      when(instARegWrite && instBRegWrite && (instARd === instBRd)){
-        io.execB := false.B
-      }.otherwise{
-        io.execB := true.B
+      when(instBLong){
+        //LI
+        when(io.instB(5,0) === "b110101".U) {
+          when(instBRd === instARd){
+            io.execB := false.B
+          }
+        }.elsewhen(io.instB(2,1) === InstructionCategory.InstM){
+          when((instBRd === instARd) || (instBRs1 === instARd )){
+            io.execB := false.B
+          }
+        }.elsewhen(io.instB(2,1) === InstructionCategory.InstR){
+          when((instBRd === instARd) || (instBRs1 === instARd )|| (instBRs2 === instARd)){
+            io.execB := false.B
+          }
+        }.elsewhen(io.instB(2,1) === InstructionCategory.InstI){
+          when((instBRd === instARd) || (instBRs1 === instARd )){
+            io.execB := false.B
+          }
+        }.otherwise{
+          when((instBRd === instARd) || (instBRs1 === instARd )){
+            io.execB := false.B
+          }
+        }
+      }.otherwise {
+        when(io.instB(2, 1) === InstructionCategory.InstM) {
+          when((instBRd === instARd)) {
+            io.execB := false.B
+          }
+        }.elsewhen(io.instB(2, 1) === InstructionCategory.InstR) {
+          when((instBRd === instARd) || (instBRs1 === instARd)) {
+            io.execB := false.B
+          }
+        }.elsewhen(io.instB(2, 1) === InstructionCategory.InstI) {
+          when((instBRd === instARd)) {
+            io.execB := false.B
+          }
+        }.otherwise {
+          //JALR, JR
+          when((instBRd === instARd) && io.instB(3) === 0.U) {
+            io.execB := false.B
+          }
+        }
       }
     }
   }.otherwise{
-    when(instARegWrite && instBRegWrite && (instARd === instBRd)){
-      io.execB := false.B
+    when(instBLong){
+      //LI
+      when(io.instB(5,0) === "b110101".U) {
+        when(instBRd === instARd){
+          io.execB := false.B
+        }
+      }.elsewhen(io.instB(2,1) === InstructionCategory.InstM){
+        when((instBRd === instARd) || (instBRs1 === instARd )){
+          io.execB := false.B
+        }
+      }.elsewhen(io.instB(2,1) === InstructionCategory.InstR){
+        when((instBRd === instARd) || (instBRs1 === instARd )|| (instBRs2 === instARd)){
+          io.execB := false.B
+        }
+      }.elsewhen(io.instB(2,1) === InstructionCategory.InstI){
+        when((instBRd === instARd) || (instBRs1 === instARd )){
+          io.execB := false.B
+        }
+      }.otherwise{
+        when((instBRd === instARd) || (instBRs1 === instARd )){
+          io.execB := false.B
+        }
+      }
     }.otherwise{
-      io.execB := true.B
+      when(io.instB(2,1) === InstructionCategory.InstM){
+        when((instBRd === instARd)){
+          io.execB := false.B
+        }
+      }.elsewhen(io.instB(2,1) === InstructionCategory.InstR){
+        when((instBRd === instARd) || (instBRs1 === instARd )){
+          io.execB := false.B
+        }
+      }.elsewhen(io.instB(2,1) === InstructionCategory.InstI){
+        when((instBRd === instARd)){
+          io.execB := false.B
+        }
+      }.otherwise{
+        //JALR, JR
+        when((instBRd === instARd) && io.instB(3) === 0.U){
+          io.execB := false.B
+        }
+      }
     }
   }
 }
