@@ -27,48 +27,57 @@ class IfUnitSpec extends ChiselFlatSpec {
   conf.debugWb = false
 
   conf.test = true
-  assert(Driver(() => new IfUnit) {
-    c =>
-      new PeekPokeTester(c) {
-        poke(c.io.in.romData, 0x01020304)
-        poke(c.io.in.jumpAddress, 0)
-        poke(c.io.in.jump, false)
-        poke(c.io.enable, true)
-        expect(c.io.testRomCacheState, romCacheStateType.NotLoaded)
-        expect(c.io.out.instOut, 0x030201)
-        expect(c.io.out.romAddress, 0)
-        expect(c.io.out.stole, false)
-        step(1)
-        poke(c.io.in.romData, 0x05060708)
-        expect(c.io.testRomCacheState, romCacheStateType.Loaded)
-        expect(c.io.testRomCache, 0x01020304)
-        expect(c.io.out.pcAddress, 3)
-        expect(c.io.out.romAddress, 1)
-        expect(c.io.out.instOut, 0x060504)
-        expect(c.io.out.stole, false)
-        poke(c.io.in.jumpAddress, 0)
-        poke(c.io.in.jump, true)
-        step(1)
-        poke(c.io.in.romData, 0x01020304)
-        expect(c.io.testRomCacheState, romCacheStateType.NotLoaded)
-        expect(c.io.out.instOut, 0x030201)
-        expect(c.io.out.romAddress, 0)
-        expect(c.io.out.stole, false)
-        poke(c.io.in.jumpAddress, 2)
-        step(1)
-        poke(c.io.in.romData, 0x01020304)
-        poke(c.io.in.jump, false)
-        expect(c.io.testRomCacheState, romCacheStateType.NotLoaded)
-        expect(c.io.out.romAddress, 0)
-        expect(c.io.out.stole, true)
-        step(1)
-        poke(c.io.in.romData, 0x05060708)
-        poke(c.io.testRomCacheState, romCacheStateType.Loaded)
-        expect(c.io.testRomCache, 0x01020304)
-        expect(c.io.out.romAddress, 1)
-        expect(c.io.out.instOut, 0x050403)
-        expect(c.io.out.stole, false)
-      }
-  })
+  behavior of "IfUnit Test"
+  it should "Load instructions with prefetch" in {
+    Driver.execute(Array(""), () => new IfUnit) {
+      c =>
+        new PeekPokeTester(c) {
+          var rom: BigInt = TestUtils.genADD(0, 1, 2) | (TestUtils.genADD(1, 2, 3) << 24) | ((TestUtils.genADD(2, 3, 4) & 0xFFFF) << 48)
+          poke(c.io.in.romData, rom)
+          poke(c.io.in.jumpAddress, 0)
+          poke(c.io.in.jump, false)
+          poke(c.io.enable, true)
+          expect(c.io.testRomCacheState, romCacheStateType.NotLoaded)
+          expect(c.io.out.instAOut, TestUtils.genADD(0, 1, 2))
+          expect(c.io.out.instBOut, TestUtils.genADD(1, 2, 3))
+          expect(c.io.out.execB, true)
+          expect(c.io.out.romAddress, 0)
+          expect(c.io.out.pcAddress, 0)
+          expect(c.io.out.stole, false)
+          step(1)
+          expect(c.io.testRomCache, rom)
+          expect(c.io.out.pcAddress, 6.U)
+          expect(c.io.out.romAddress, 1.U)
+          rom = ((TestUtils.genADD(2, 3, 4) >> 16) & 0xFF) |
+            (TestUtils.genADD2(3, 4) << 8) |
+            (TestUtils.genADD(4, 5, 6) << 24) |
+            (TestUtils.genADD2(4, 5) << 48)
+          poke(c.io.in.romData, rom)
+          expect(c.io.testRomCacheState, romCacheStateType.Loaded)
+          expect(c.io.out.instAOut, TestUtils.genADD(2, 3, 4))
+          var instB = peek(c.io.out.instBOut) & 0xFFFF
+          assert(instB == TestUtils.genADD2(3, 4))
+          expect(c.io.out.execB, true.B)
+          step(1)
+          expect(c.io.testRomCache, rom)
+          expect(c.io.out.pcAddress, 11.U)
+          expect(c.io.out.romAddress, 2.U)
+          var rom2 = TestUtils.genADD(5, 6, 7) |
+            (TestUtils.genADD(6, 7, 0) << 24) |
+            (TestUtils.genADD2(7, 0) << 48)
+          poke(c.io.in.romData, rom2)
+          expect(c.io.out.instAOut, TestUtils.genADD(4, 5, 6))
+          expect(c.io.out.execB, false.B)
+          step(1)
+          expect(c.io.testRomCacheState, romCacheStateType.Loaded)
+          expect(c.io.out.pcAddress, 14.U)
+          expect(c.io.testRomCache, rom)
+          var instA = peek(c.io.out.instAOut) & 0xFFFF
+          assert(instA == TestUtils.genADD2(4, 5))
+          expect(c.io.out.instBOut, TestUtils.genADD(5, 6, 7))
+          expect(c.io.out.execB, true.B)
+        }
+    } should be (true)
+  }
 }
 
