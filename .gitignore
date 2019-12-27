@@ -10,3 +10,4 @@ test_run_dir
 *.v
 .attach*
 .~lock*
+utils/test*
