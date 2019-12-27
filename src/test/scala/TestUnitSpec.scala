@@ -1,3 +1,5 @@
+import java.io.File
+
 import chisel3.iotesters.{ChiselFlatSpec, Driver, PeekPokeTester}
 
 class TestUnitSpec extends ChiselFlatSpec{
@@ -9,6 +11,12 @@ class TestUnitSpec extends ChiselFlatSpec{
   conf.debugWb = false
 
   conf.test = true
+
+  val testFile = new File("utils/test.bin")
+  println(testFile.getName())
+  val parser = new TestBinParser(testFile.getAbsolutePath())
+  println(parser.romSeq)
+  conf.testRom = parser.romSeq
 
   behavior of "TestUnit Test"
 
