@@ -44,26 +44,26 @@ class ALU(implicit val conf:CAHPConfig) extends Module {
   inB_sub := (~io.in.inB).asUInt()+1.U
 
   when(io.in.opcode === ALUOpcode.ADD) {
-    io.out := io.in.inA + io.in.inB
+    io.out.out := io.in.inA + io.in.inB
   }.elsewhen(io.in.opcode === ALUOpcode.SUB) {
     resCarry := io.in.inA +& inB_sub
-    io.out := resCarry(15, 0)
+    io.out.out := resCarry(15, 0)
   }.elsewhen(io.in.opcode === ALUOpcode.AND) {
-    io.out := io.in.inA & io.in.inB
+    io.out.out := io.in.inA & io.in.inB
   }.elsewhen(io.in.opcode === ALUOpcode.OR) {
-    io.out := io.in.inA | io.in.inB
+    io.out.out := io.in.inA | io.in.inB
   }.elsewhen(io.in.opcode === ALUOpcode.XOR) {
-    io.out := io.in.inA ^ io.in.inB
+    io.out.out := io.in.inA ^ io.in.inB
   }.elsewhen(io.in.opcode === ALUOpcode.LSL) {
-    io.out := (io.in.inA << io.in.inB).asUInt()
+    io.out.out := (io.in.inA << io.in.inB).asUInt()
   }.elsewhen(io.in.opcode === ALUOpcode.LSR) {
-    io.out := (io.in.inA >> io.in.inB).asUInt()
+    io.out.out := (io.in.inA >> io.in.inB).asUInt()
   }.elsewhen(io.in.opcode === ALUOpcode.ASR) {
-    io.out := (io.in.inA.asSInt() >> io.in.inB).asUInt()
+    io.out.out := (io.in.inA.asSInt() >> io.in.inB).asUInt()
   }.elsewhen(io.in.opcode === ALUOpcode.MOV) {
-    io.out := io.in.inB
+    io.out.out := io.in.inB
   }.otherwise {
-    io.out := DontCare
+    io.out.out := DontCare
   }
 
   io.out.flagCarry := ~resCarry(16)

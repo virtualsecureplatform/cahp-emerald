@@ -8,10 +8,13 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
     val memOut = Flipped(new MemUnitIn)
     val wbOut = Flipped(new WbUnitIn)
     val stole = Output(Bool())
+
+    val exUnitOut = new ExUnitOut
   })
 
   val ifUnit = Module(new IfUnit())
   val idWbUnit = Module(new IdWbUnit())
+  val exUnit = Module(new ExUnit())
   val rom = Module(new ExternalTestRom)
 
   ifUnit.io.in.romData := rom.io.romData
@@ -42,9 +45,18 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   idWbUnit.io.wbEnable := true.B
   idWbUnit.io.flush := false.B
 
+
+  exUnit.io.in := idWbUnit.io.exOut
+  exUnit.io.memIn := idWbUnit.io.memOut
+  exUnit.io.wbIn := idWbUnit.io.wbOut
+  exUnit.io.enable := true.B
+  exUnit.io.flush := false.B
+
   io.ifOut := ifUnit.io.out
   io.exOut := idWbUnit.io.exOut
   io.memOut := idWbUnit.io.memOut
   io.wbOut := idWbUnit.io.wbOut
   io.stole := idWbUnit.io.stole
+
+  io.exUnitOut := exUnit.io.out
 }

@@ -39,6 +39,9 @@ class TestUnitSpec extends ChiselFlatSpec{
           expect(c.io.wbOut.instBRegWrite.regWrite, 1)
           expect(c.io.wbOut.instARegWrite.regWriteEnable, true)
           expect(c.io.wbOut.instBRegWrite.regWriteEnable, true)
+          step(1)
+          expect(c.io.exUnitOut.instARes, 1)
+          expect(c.io.exUnitOut.instBRes, 2)
         }
     } should be (true)
   }
