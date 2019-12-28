@@ -79,7 +79,7 @@ class DecoderUnitSpec extends ChiselFlatSpec {
   conf.test = true
   behavior of "Decoder Test"
   it should "Expected value" in {
-    Driver.execute(Array(""), () => new Decoder) {
+    Driver.execute(Array(""), () => new InstructionDecoder) {
       c =>
         new PeekPokeTester(c) {
           poke(c.io.pc, 0)
