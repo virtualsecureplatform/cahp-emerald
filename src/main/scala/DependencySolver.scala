@@ -22,10 +22,12 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
 
   io.execA := true.B
   io.execB := true.B
-  when(io.instA(2,1) === InstructionCategory.InstJ){
+  val instAType = DecoderUtils.getInstructionCategory(io.instA)
+  val instBType = DecoderUtils.getInstructionCategory(io.instB)
+  when(instAType === InstructionCategory.InstJ){
     io.execB := false.B
-  }.elsewhen(io.instA(2,1) === InstructionCategory.InstM){
-    when(io.instB(2,1) === InstructionCategory.InstM){
+  }.elsewhen(instAType === InstructionCategory.InstM){
+    when(instBType === InstructionCategory.InstM){
       io.execB := false.B
     }.otherwise{
       when(instBLong){
@@ -34,15 +36,15 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
           when(instBRd === instARd){
             io.execB := false.B
           }
-        }.elsewhen(io.instB(2,1) === InstructionCategory.InstM){
+        }.elsewhen(instBType === InstructionCategory.InstM){
           when((instBRd === instARd) || (instBRs1 === instARd )){
             io.execB := false.B
           }
-        }.elsewhen(io.instB(2,1) === InstructionCategory.InstR){
+        }.elsewhen(instBType === InstructionCategory.InstR){
           when((instBRd === instARd) || (instBRs1 === instARd )|| (instBRs2 === instARd)){
             io.execB := false.B
           }
-        }.elsewhen(io.instB(2,1) === InstructionCategory.InstI){
+        }.elsewhen(instBType === InstructionCategory.InstI){
           when((instBRd === instARd) || (instBRs1 === instARd )){
             io.execB := false.B
           }
@@ -52,15 +54,15 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
           }
         }
       }.otherwise {
-        when(io.instB(2, 1) === InstructionCategory.InstM) {
+        when(instBType === InstructionCategory.InstM) {
           when((instBRd === instARd)) {
             io.execB := false.B
           }
-        }.elsewhen(io.instB(2, 1) === InstructionCategory.InstR) {
+        }.elsewhen(instBType === InstructionCategory.InstR) {
           when((instBRd === instARd) || (instBRs1 === instARd)) {
             io.execB := false.B
           }
-        }.elsewhen(io.instB(2, 1) === InstructionCategory.InstI) {
+        }.elsewhen(instBType === InstructionCategory.InstI) {
           when((instBRd === instARd)) {
             io.execB := false.B
           }
@@ -79,15 +81,15 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
         when(instBRd === instARd){
           io.execB := false.B
         }
-      }.elsewhen(io.instB(2,1) === InstructionCategory.InstM){
+      }.elsewhen(instBType === InstructionCategory.InstM){
         when((instBRd === instARd) || (instBRs1 === instARd )){
           io.execB := false.B
         }
-      }.elsewhen(io.instB(2,1) === InstructionCategory.InstR){
+      }.elsewhen(instBType === InstructionCategory.InstR){
         when((instBRd === instARd) || (instBRs1 === instARd )|| (instBRs2 === instARd)){
           io.execB := false.B
         }
-      }.elsewhen(io.instB(2,1) === InstructionCategory.InstI){
+      }.elsewhen(instBType === InstructionCategory.InstI){
         when((instBRd === instARd) || (instBRs1 === instARd )){
           io.execB := false.B
         }
@@ -97,15 +99,15 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
         }
       }
     }.otherwise{
-      when(io.instB(2,1) === InstructionCategory.InstM){
+      when(instBType === InstructionCategory.InstM){
         when((instBRd === instARd)){
           io.execB := false.B
         }
-      }.elsewhen(io.instB(2,1) === InstructionCategory.InstR){
+      }.elsewhen(instBType === InstructionCategory.InstR){
         when((instBRd === instARd) || (instBRs1 === instARd )){
           io.execB := false.B
         }
-      }.elsewhen(io.instB(2,1) === InstructionCategory.InstI){
+      }.elsewhen(instBType === InstructionCategory.InstI){
         when((instBRd === instARd)){
           io.execB := false.B
         }

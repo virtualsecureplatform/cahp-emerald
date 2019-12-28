@@ -58,7 +58,7 @@ object TestUtils {
 
   def genLI(rd:Int, imm:Int):BigInt = {
     val simm10 = genSimm10(imm)
-    ((simm10&0xFF)<<16)|(rd << 12)|((imm>>8)<<6)|Integer.parseUnsignedInt("110101",2)
+    ((simm10&0xFF)<<16)|(rd << 8)|((imm>>8)<<6)|Integer.parseUnsignedInt("110101",2)
   }
 
   def genADD(rd:Int, rs1:Int, rs2:Int):BigInt = {

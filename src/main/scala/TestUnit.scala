@@ -3,6 +3,7 @@ import chisel3.{util, _}
 
 class TestUnit(implicit val conf: CAHPConfig) extends Module{
   val io = IO(new Bundle{
+    val ifOut = new IfUnitOut
     val exOut = Flipped(new ExUnitIn)
     val memOut = Flipped(new MemUnitIn)
     val wbOut = Flipped(new WbUnitIn)
@@ -41,6 +42,7 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   idWbUnit.io.wbEnable := true.B
   idWbUnit.io.flush := false.B
 
+  io.ifOut := ifUnit.io.out
   io.exOut := idWbUnit.io.exOut
   io.memOut := idWbUnit.io.memOut
   io.wbOut := idWbUnit.io.wbOut

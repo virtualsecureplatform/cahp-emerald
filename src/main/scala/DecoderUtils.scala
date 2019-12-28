@@ -240,5 +240,19 @@ object DecoderUtils {
     }
     inBSel
   }
+
+  def getInstructionCategory(inst:UInt): UInt = {
+    val instCategory = Wire(UInt(2.W))
+    when(inst(2,1) === InstructionCategory.InstM){
+      when(inst(5,0) === UInt("b110101")){
+        instCategory := InstructionCategory.InstI
+      }.otherwise{
+        instCategory := InstructionCategory.InstM
+      }
+    }.otherwise{
+      instCategory := inst(2,1)
+    }
+    instCategory
+  }
 }
 

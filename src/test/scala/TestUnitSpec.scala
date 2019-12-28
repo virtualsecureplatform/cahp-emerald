@@ -24,11 +24,19 @@ class TestUnitSpec extends ChiselFlatSpec{
     Driver.execute(Array(""), () => new TestUnit){
       c =>
         new PeekPokeTester(c) {
+          expect(c.io.ifOut.instAOut, TestUtils.genLI(0, 1))
+          expect(c.io.ifOut.instBOut, TestUtils.genLI(1, 2))
           step(1)
-          expect(c.io.exOut.instAALU.opcode, 0)
-          expect(c.io.exOut.instBALU.opcode, 0)
+          expect(c.io.exOut.instAALU.opcode, 8)
+          expect(c.io.exOut.instBALU.opcode, 8)
+          expect(c.io.exOut.instAALU.inB, 1)
+          expect(c.io.exOut.instBALU.inB, 2)
+          expect(c.io.exOut.selJump, false)
+          expect(c.io.exOut.selMem, false)
           expect(c.io.memOut.instAMemRead, false)
           expect(c.io.memOut.instBMemRead, false)
+          expect(c.io.wbOut.instARegWrite.regWrite, 0)
+          expect(c.io.wbOut.instBRegWrite.regWrite, 1)
           expect(c.io.wbOut.instARegWrite.regWriteEnable, true)
           expect(c.io.wbOut.instBRegWrite.regWriteEnable, true)
         }
