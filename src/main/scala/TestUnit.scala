@@ -31,9 +31,6 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   idWbUnit.io.idIn.instB := ifUnit.io.out.instBOut
   idWbUnit.io.idIn.pc := DontCare
 
-  idWbUnit.io.wbIn := DontCare
-  idWbUnit.io.wbIn.instARegWrite.regWriteEnable := false.B
-  idWbUnit.io.wbIn.instBRegWrite.regWriteEnable := false.B
   idWbUnit.io.exMemIn := DontCare
   idWbUnit.io.exMemIn.instAMemRead := false.B
   idWbUnit.io.exMemIn.instBMemRead := false.B
@@ -59,6 +56,8 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   memUnit.io.enable := true.B
   memUnit.io.memA.out := DontCare
   memUnit.io.memB.out := DontCare
+
+  idWbUnit.io.wbIn := memUnit.io.wbOut
 
   io.ifOut := ifUnit.io.out
   io.exOut := idWbUnit.io.exOut
