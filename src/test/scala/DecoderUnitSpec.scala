@@ -82,16 +82,16 @@ class DecoderUnitSpec extends ChiselFlatSpec {
     Driver.execute(Array(""), () => new Decoder) {
       c =>
         new PeekPokeTester(c) {
-          poke(c.io.in.pc, 0)
+          poke(c.io.pc, 0)
           inst.foreach { item =>
             printf("Testing: %s\n", item._1)
-            poke(c.io.in.inst, item._2._1)
+            poke(c.io.inst, item._2._1)
             if (item._2._2 < 0x10) {
-              expect(c.io.exOut.opcode, item._2._2)
+              expect(c.io.exALUOut.opcode, item._2._2)
             }
             expect(c.io.memOut.memWrite, item._2._3)
             if (item._2._4 < 2) {
-              expect(c.io.memOut.memRead, item._2._4)
+              expect(c.io.memOut.instAMemRead, item._2._4)
             }
             if (item._2._5 < 2) {
               expect(c.io.memOut.byteEnable, item._2._5)
@@ -118,7 +118,7 @@ class DecoderUnitSpec extends ChiselFlatSpec {
               expect(c.io.pcImmSel, item._2._12)
             }
             if (item._2._13 < 0x8) {
-              expect(c.io.exOut.pcOpcode, item._2._13)
+              expect(c.io.exBCOut.pcOpcode, item._2._13)
             }
           }
         }

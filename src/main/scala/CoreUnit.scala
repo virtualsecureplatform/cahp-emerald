@@ -53,7 +53,7 @@ class CoreUnit(implicit val conf: CAHPConfig) extends Module {
   io.testFinish := DontCare
 
 
-  idwbUnit.io.idIn.inst := ifUnit.io.out.instOut
+  //idwbUnit.io.idIn.inst := ifUnit.io.out.instOut
   idwbUnit.io.idIn.pc := ifUnit.io.out.pcAddress
   idwbUnit.io.exWbIn := exUnit.io.wbOut
   idwbUnit.io.exMemIn := exUnit.io.memOut
@@ -85,9 +85,9 @@ class CoreUnit(implicit val conf: CAHPConfig) extends Module {
   io.regOut := idwbUnit.io.regOut
 
 
-  io.testRegWrite := memUnit.io.wbOut.regWrite
-  io.testRegWriteEnable := memUnit.io.wbOut.regWriteEnable
-  io.testRegWriteData := memUnit.io.wbOut.regWriteData
+  //io.testRegWrite := memUnit.io.wbOut.regWrite
+  //io.testRegWriteEnable := memUnit.io.wbOut.regWriteEnable
+  //io.testRegWriteData := memUnit.io.wbOut.regWriteData
 
   if(conf.load){
     io.testClockIF := !io.load

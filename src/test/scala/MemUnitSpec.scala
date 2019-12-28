@@ -32,7 +32,7 @@ class MemUnitSpec extends ChiselFlatSpec {
         poke(c.io.signExt, false)
         poke(c.io.byteEnable, false)
         poke(c.io.Enable, true)
-        poke(c.io.memRead, false)
+        poke(c.io.instAMemRead, false)
         poke(c.io.memWrite, false)
         println("Pass through Test")
         for (i <- 0 until 100) {
@@ -54,7 +54,7 @@ class MemUnitSpec extends ChiselFlatSpec {
           step(1)
         }
         poke(c.io.memWrite, false)
-        poke(c.io.memRead, true)
+        poke(c.io.instAMemRead, true)
         for(i <- 0 until 100){
           poke(c.io.address, (i*2).U(9.W))
           step(1)
@@ -70,7 +70,7 @@ class MemUnitSpec extends ChiselFlatSpec {
           expect(c.io.out, testDataArray(i)(15,8))
         }
         testDataArray = Array.empty
-        poke(c.io.memRead, false)
+        poke(c.io.instAMemRead, false)
         poke(c.io.memWrite, true)
         for(i <- 0 until 100){
           val v = Random.nextInt(0xFFFF)
@@ -79,7 +79,7 @@ class MemUnitSpec extends ChiselFlatSpec {
           testDataArray = testDataArray :+ v.U(16.W)
           step(1)
         }
-        poke(c.io.memRead, true)
+        poke(c.io.instAMemRead, true)
         poke(c.io.memWrite, false)
         for(i <- 0 until 100){
           poke(c.io.address, i.U(9.W))

@@ -178,6 +178,12 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   val stole = Wire(Bool())
   val romData = Wire(UInt(64.W))
   val instBLoadable = Wire(Bool())
+  val instBAddr = Wire(UInt(conf.romAddrWidth.W))
+  val instBOut = Wire(UInt(24.W))
+  instBOut := DontCare
+  val isLong = Wire(Bool())
+  val isInstBLong = instBOut(0) === 1.U
+  isLong := false.B
 
   // **** Register Declaration ****
   val romCache = Reg(UInt(64.W))
@@ -189,11 +195,16 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   pc.io.jump := io.in.jump
   pc.io.enable := io.enable
 
-  io.out.pcAddress := pc.io.pcOut
+  when(depSolver.io.execB){
+    io.out.pcAddress := instBAddr
+  }.otherwise{
+    io.out.pcAddress := pc.io.pcOut
+  }
+
   io.out.stole := stole
 
   depSolver.io.instA := io.out.instAOut
-  depSolver.io.instB := io.out.instBOut
+  depSolver.io.instB := instBOut
   io.out.execB := depSolver.io.execB
 
   // **** Test I/O Connection ****
@@ -253,10 +264,6 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
 
   instBLoadable := false.B
   stole := false.B
-  val instBAddr = Wire(UInt(conf.romAddrWidth.W))
-  val isLong = Wire(Bool())
-  val isInstBLong = io.out.instBOut(0) === 1.U
-  isLong := false.B
 
   when(isLong){
     when(io.out.execB) {
@@ -330,14 +337,14 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
       when(stole){
         io.out.instOut := 0.U
         io.out.instAOut := 0.U
-        io.out.instBOut := 0.U
+        instBOut := 0.U
       }.otherwise {
         io.out.instOut := getInst(io.in.jumpAddress, romData, romData)
         io.out.instAOut := getInst(io.in.jumpAddress, romData, romData)
         when(instBLoadable){
-          io.out.instBOut := getInst(instBAddr, romData, romData)
+          instBOut := getInst(instBAddr, romData, romData)
         }.otherwise{
-          io.out.instBOut := 0.U
+          instBOut := 0.U
         }
       }
     }.otherwise {
@@ -389,14 +396,14 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
         when(stole){
           io.out.instOut := 0.U
           io.out.instAOut := 0.U
-          io.out.instBOut := 0.U
+          instBOut := 0.U
         }.otherwise{
           io.out.instOut := getInst(io.out.pcAddress, romData, romData)
           io.out.instAOut := getInst(io.in.jumpAddress, romData, romData)
           when(instBLoadable){
-            io.out.instBOut := getInst(instBAddr, romData, romData)
+            instBOut := getInst(instBAddr, romData, romData)
           }.otherwise{
-            io.out.instBOut := 0.U
+            instBOut := 0.U
           }
         }
       }.otherwise {
@@ -426,18 +433,25 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
         io.out.instOut := getInst(io.out.pcAddress, romData, romCache)
         io.out.instAOut := getInst(io.out.pcAddress, romData, romCache)
         when(instBLoadFromCache){
-          io.out.instBOut := getInst(instBAddr, romData, romCache)
+          instBOut := getInst(instBAddr, romData, romCache)
         }.otherwise{
-          io.out.instBOut := getInst(instBAddr, romData, romData)
+          instBOut := getInst(instBAddr, romData, romData)
         }
       }
     }
   }.otherwise{
     io.out.instOut := DontCare
     io.out.instAOut := DontCare
-    io.out.instBOut := DontCare
+    instBOut := DontCare
     io.out.romAddress := DontCare
   }
+
+  when(depSolver.io.execB){
+    io.out.instBOut := instBOut
+  }.otherwise{
+    io.out.instBOut := DontCare
+  }
+
   when(conf.debugIf.B){
     printf("\n[IF]PC Address:0x%x\n", io.out.pcAddress)
     printf("[IF] Instruction Out:%x\n", io.out.instOut)

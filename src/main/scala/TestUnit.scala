@@ -11,6 +11,7 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
 
   ifUnit.io.in.jumpAddress := 0.U
   ifUnit.io.in.jump := false.B
+  ifUnit.io.enable := true.B
 
   rom.io.romAddress := ifUnit.io.out.romAddress
 

@@ -18,14 +18,20 @@ import chisel3._
 import chisel3.util.{Cat, Fill}
 
 class IdUnitIn(implicit val conf:CAHPConfig) extends Bundle {
-  val inst = Input(UInt(24.W))
+  val instA = Input(UInt(24.W))
+  val instB = Input(UInt(24.W))
   val pc = Input(UInt(9.W))
 }
 
-class WbUnitIn(implicit val conf:CAHPConfig) extends Bundle {
+class MainRegisterWritePortIn(implicit val conf:CAHPConfig) extends Bundle {
   val regWrite = Input(UInt(4.W))
   val regWriteData = Input(UInt(16.W))
   val regWriteEnable = Input(Bool())
+}
+
+class WbUnitIn(implicit val conf:CAHPConfig) extends Bundle {
+  val instARegWrite = new MainRegisterWritePortIn()
+  val instBRegWrite = new MainRegisterWritePortIn()
 
   val finishFlag = Input(Bool())
   val pc = Input(UInt(9.W))
@@ -60,7 +66,8 @@ class IdWbUnitPort (implicit val conf:CAHPConfig) extends Bundle {
 }
 
 class DecoderPort(implicit val conf:CAHPConfig) extends Bundle {
-  val in = new IdUnitIn
+  val inst = Input(UInt(24.W))
+  val pc = Input(UInt(9.W))
 
   val imm = Output(UInt(16.W))
   val pcImm = Output(UInt(16.W))
@@ -71,9 +78,14 @@ class DecoderPort(implicit val conf:CAHPConfig) extends Bundle {
   val longInst = Output(Bool())
   val inASel = Output(Bool())
   val inBSel = Output(Bool())
-  val exOut = Flipped(new ExUnitIn)
+  val isJump = Output(Bool())
+  val isMem = Output(Bool())
+  val isFinish = Output(Bool())
+
+  val exALUOut = Flipped(new ALUPortIn)
+  val exBCOut = Flipped(new BranchControllerIn())
   val memOut = Flipped(new MemUnitIn)
-  val wbOut = Flipped(new WbUnitIn)
+  val wbOut = Flipped(new MainRegisterWritePortIn())
 
   val testImmType = if(conf.test) Output(UInt(4.W)) else Output(UInt(0.W))
   val testPCImmType = if(conf.test) Output(UInt(2.W)) else Output(UInt(0.W))
@@ -323,64 +335,105 @@ class Decoder(implicit val conf:CAHPConfig) extends Module {
   }
   val io = IO(new DecoderPort)
 
-  io.imm := genImm(io.in.inst, getImmType(io.in.inst))
-  io.pcImm := genPCImm(io.in.inst, getPCImmType(io.in.inst))
-  io.pcImmSel := getPCImmSel(io.in.inst)
-  io.testImmType := getImmType(io.in.inst)
-  io.testPCImmType := getPCImmType(io.in.inst)
+  io.isJump := false.B
+  io.isMem := false.B
 
-  io.inASel := getInASel(io.in.inst)
-  io.inBSel := getInBSel(io.in.inst)
-  io.exOut.opcode := getExOpcode(io.in.inst)
-  io.exOut.inA := DontCare
-  io.exOut.inB := DontCare
-  io.exOut.pcOpcode := getPCOpcode(io.in.inst)
-  io.exOut.pcImm := DontCare
-  io.exOut.pc := DontCare
-  io.exOut.pcAdd := DontCare
-  io.memOut.memRead := getMemRead(io.in.inst)
-  io.memOut.memWrite := getMemWrite(io.in.inst)
-  io.memOut.byteEnable := getMemByte(io.in.inst)
-  io.memOut.signExt := getMemSignExt(io.in.inst)
+  io.imm := genImm(io.inst, getImmType(io.inst))
+  io.pcImm := genPCImm(io.inst, getPCImmType(io.inst))
+  io.pcImmSel := getPCImmSel(io.inst)
+  io.testImmType := getImmType(io.inst)
+  io.testPCImmType := getPCImmType(io.inst)
+
+  io.inASel := getInASel(io.inst)
+  io.inBSel := getInBSel(io.inst)
+  io.exALUOut.opcode := getExOpcode(io.inst)
+  io.exALUOut.inA := DontCare
+  io.exALUOut.inB := DontCare
+  io.exBCOut.pcOpcode := getPCOpcode(io.inst)
+  io.exBCOut.pcImm := DontCare
+  io.exBCOut.pc := DontCare
+  io.exBCOut.pcAdd := DontCare
+  io.memOut.instAMemRead := getMemRead(io.inst)
+  io.memOut.instBMemRead := DontCare
+  io.memOut.memWrite := getMemWrite(io.inst)
+  io.memOut.byteEnable := getMemByte(io.inst)
+  io.memOut.signExt := getMemSignExt(io.inst)
   io.memOut.address := DontCare
   io.memOut.in := DontCare
 
-  io.longInst := (io.in.inst(0) === 1.U)
+  io.isMem := io.memOut.instAMemRead || io.memOut.memWrite
+
+  io.longInst := (io.inst(0) === 1.U)
 
   when(io.longInst) {
-    io.rs1 := io.in.inst(15, 12)
-    when(io.in.inst(2, 1) === InstructionCategory.InstM || io.in.inst(2, 1) === InstructionCategory.InstJ){
-      io.rs2 := io.in.inst(11, 8)
+    io.rs1 := io.inst(15, 12)
+    when(io.inst(2, 1) === InstructionCategory.InstM || io.inst(2, 1) === InstructionCategory.InstJ){
+      io.rs2 := io.inst(11, 8)
     }.otherwise{
-      io.rs2 := io.in.inst(19,16)
+      io.rs2 := io.inst(19,16)
     }
   }.otherwise{
-    when(io.in.inst(2, 1) === InstructionCategory.InstM){
+    when(io.inst(2, 1) === InstructionCategory.InstM){
       io.rs1 := 1.U(4.W)
-      io.rs2 := io.in.inst(11, 8)
+      io.rs2 := io.inst(11, 8)
     }.otherwise{
-      io.rs1 := io.in.inst(11, 8)
-      io.rs2 := io.in.inst(15, 12)
+      io.rs1 := io.inst(11, 8)
+      io.rs2 := io.inst(15, 12)
     }
   }
-  when(io.in.inst(2,1) === InstructionCategory.InstJ){
+  when(io.inst(2,1) === InstructionCategory.InstJ){
     io.rd := 0.U(4.W)
+    io.isJump := true.B
   }.otherwise{
-    io.rd := io.in.inst(11, 8)
+    io.rd := io.inst(11, 8)
   }
 
   io.wbOut.regWrite := io.rd
-  io.wbOut.regWriteEnable := DecoderUtils.getRegWrite(io.in.inst)
+  io.wbOut.regWriteEnable := DecoderUtils.getRegWrite(io.inst)
   io.wbOut.regWriteData := DontCare
-  io.wbOut.finishFlag := (io.in.inst(15,0) === 0xE.U)
-  io.wbOut.pc := DontCare
+  io.isFinish := (io.inst(15,0) === 0xE.U)
+}
+
+class ForwardController(implicit val conf:CAHPConfig) extends Module{
+  val io = IO(new Bundle{
+    val rs = Input(UInt(4.W))
+    val rsData = Input(UInt(16.W))
+    val instAEx = new MainRegisterWritePortIn()
+    val instBEx = new MainRegisterWritePortIn()
+    val instAMem = new MainRegisterWritePortIn()
+    val instBMem = new MainRegisterWritePortIn()
+    val rsDataOut = Output(UInt(16.W))
+  })
+  when(io.rs === io.instAEx.regWrite && io.instAEx.regWriteEnable) {
+    //Forward from EX
+    io.rsDataOut := io.instAEx.regWriteData
+  }.elsewhen(io.rs === io.instBEx.regWrite && io.instBEx.regWriteEnable) {
+    //Forward from EX
+    io.rsDataOut := io.instBEx.regWriteData
+  }.elsewhen(io.rs === io.instAMem.regWrite && io.instAMem.regWriteEnable) {
+    //Forward from MEM
+    io.rsDataOut := io.instAMem.regWriteData
+  }.elsewhen(io.rs === io.instBMem.regWrite && io.instBMem.regWriteEnable){
+    //Forward from MEM
+    io.rsDataOut := io.instBMem.regWriteData
+  }.otherwise{
+    io.rsDataOut := io.rsData
+  }
 }
 
 class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
   val io = IO(new IdWbUnitPort)
 
-  val decoder = Module(new Decoder())
+  val instADecoder = Module(new Decoder())
+  val instBDecoder = Module(new Decoder())
   val mainRegister = Module(new MainRegister())
+
+  val instARs1Fwd = Module(new ForwardController())
+  val instARs2Fwd = Module(new ForwardController())
+
+  val instBRs1Fwd = Module(new ForwardController())
+  val instBRs2Fwd = Module(new ForwardController())
+
   val pIdReg = RegInit(0.U.asTypeOf(new IdUnitIn))
 
   val stole = Wire(Bool())
@@ -388,77 +441,148 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
 
   when(io.idEnable&&io.flush){
     pIdReg := io.idIn
-    pIdReg.inst := 0.U(16.W)
+    pIdReg.instA := 0.U(16.W)
+    pIdReg.instB := 0.U(16.W)
   }.elsewhen(io.idEnable&&(!stole)){
     pIdReg := io.idIn
   }
-  decoder.io.in := pIdReg
 
-  /*
-  mainRegister.io.rs1 := decoder.io.rs1
-  mainRegister.io.rs2 := decoder.io.rs2
-  mainRegister.io.rd := io.wbIn.regWrite
-  mainRegister.io.writeData := io.wbIn.regWriteData
-  mainRegister.io.writeEnable := io.wbIn.regWriteEnable&&io.wbEnable
-  mainRegister.io.testPC := io.wbIn.pc
-   */
+  instADecoder.io.inst := pIdReg.instA
+  instBDecoder.io.inst := pIdReg.instB
 
-  io.exOut := decoder.io.exOut
-  io.exOut.pc := pIdReg.pc
+  mainRegister.io.portA.rs1 := instADecoder.io.rs1
+  mainRegister.io.portA.rs2 := instADecoder.io.rs2
+  mainRegister.io.portB.rs1 := instBDecoder.io.rs1
+  mainRegister.io.portB.rs2 := instBDecoder.io.rs2
 
-  val rs1Data = Wire(UInt(16.W))
-  val rs2Data = Wire(UInt(16.W))
-  when(decoder.io.rs1 === io.exWbIn.regWrite && io.exWbIn.regWriteEnable){
-    //printf("RS1 FORWARD FROM EX\n");
-    rs1Data := io.exWbIn.regWriteData
-  }.elsewhen(decoder.io.rs1 === io.memWbIn.regWrite && io.memWbIn.regWriteEnable){
-    //printf("RS1 FORWARD FROM MEM\n");
-    rs1Data := io.memWbIn.regWriteData
+  mainRegister.io.portA.rd := io.wbIn.instARegWrite.regWrite
+  mainRegister.io.portA.writeData := io.wbIn.instARegWrite.regWriteData
+  mainRegister.io.portA.writeEnable := io.wbIn.instARegWrite.regWriteEnable
+  mainRegister.io.portB.rd := io.wbIn.instBRegWrite.regWrite
+  mainRegister.io.portB.writeData := io.wbIn.instBRegWrite.regWriteData
+  mainRegister.io.portB.writeEnable := io.wbIn.instBRegWrite.regWriteEnable
+  //mainRegister.io.testPC := io.wbIn.pc
+
+  //io.exOut. := decoder.io.exOut
+  //io.exOut.pc := pIdReg.pc
+  io.exOut.instAALU := instADecoder.io.exALUOut
+  io.exOut.instBALU := instBDecoder.io.exALUOut
+
+  instARs1Fwd.io.rs := instADecoder.io.rs1
+  instARs1Fwd.io.rsData := mainRegister.io.portA.rs1Data
+  instARs1Fwd.io.instAEx := io.exWbIn.instARegWrite
+  instARs1Fwd.io.instBEx := io.exWbIn.instBRegWrite
+  instARs1Fwd.io.instAMem := io.memWbIn.instARegWrite
+  instARs1Fwd.io.instBMem := io.memWbIn.instBRegWrite
+
+  instARs2Fwd.io.rs := instADecoder.io.rs2
+  instARs2Fwd.io.rsData := mainRegister.io.portA.rs2Data
+  instARs2Fwd.io.instAEx := io.exWbIn.instARegWrite
+  instARs2Fwd.io.instBEx := io.exWbIn.instBRegWrite
+  instARs2Fwd.io.instAMem := io.memWbIn.instARegWrite
+  instARs2Fwd.io.instBMem := io.memWbIn.instBRegWrite
+
+  instBRs1Fwd.io.rs := instBDecoder.io.rs1
+  instBRs1Fwd.io.rsData := mainRegister.io.portB.rs1Data
+  instBRs1Fwd.io.instAEx := io.exWbIn.instARegWrite
+  instBRs1Fwd.io.instBEx := io.exWbIn.instBRegWrite
+  instBRs1Fwd.io.instAMem := io.memWbIn.instARegWrite
+  instBRs1Fwd.io.instBMem := io.memWbIn.instBRegWrite
+
+  instBRs2Fwd.io.rs := instBDecoder.io.rs2
+  instBRs2Fwd.io.rsData := mainRegister.io.portB.rs2Data
+  instBRs2Fwd.io.instAEx := io.exWbIn.instARegWrite
+  instBRs2Fwd.io.instBEx := io.exWbIn.instBRegWrite
+  instBRs2Fwd.io.instAMem := io.memWbIn.instARegWrite
+  instBRs2Fwd.io.instBMem := io.memWbIn.instBRegWrite
+
+  when(
+      (instADecoder.io.rs1 === io.exWbIn.instARegWrite.regWrite)||
+      (instADecoder.io.rs2 === io.exWbIn.instARegWrite.regWrite)||
+      (instBDecoder.io.rs1 === io.exWbIn.instARegWrite.regWrite)||
+      (instBDecoder.io.rs2 === io.exWbIn.instARegWrite.regWrite)
+  ){
+    stole := stole || io.exMemIn.instAMemRead
+  }
+
+  when(
+    (instADecoder.io.rs1 === io.exWbIn.instBRegWrite.regWrite)||
+      (instADecoder.io.rs2 === io.exWbIn.instBRegWrite.regWrite)||
+      (instBDecoder.io.rs1 === io.exWbIn.instBRegWrite.regWrite)||
+      (instBDecoder.io.rs2 === io.exWbIn.instBRegWrite.regWrite)
+  ){
+    stole := stole || io.exMemIn.instBMemRead
+  }
+
+  //Select Branch Address Source
+  when(instADecoder.io.isJump){
+    when(instADecoder.io.pcImmSel){
+      io.exOut.bcIn.pcImm := instADecoder.io.pcImm
+      io.exOut.bcIn.pcAdd := true.B
+    }.otherwise{
+      io.exOut.bcIn.pcImm := instARs1Fwd.io.rsDataOut
+      io.exOut.bcIn.pcAdd := false.B
+    }
+    io.exOut.bcIn.pcOpcode := instADecoder.io.exBCOut.pcOpcode
   }.otherwise{
-    //rs1Data := mainRegister.io.rs1Data
+    when(instBDecoder.io.pcImmSel){
+      io.exOut.bcIn.pcImm := instBDecoder.io.pcImm
+      io.exOut.bcIn.pcAdd := true.B
+    }.otherwise{
+      io.exOut.bcIn.pcImm := instBRs1Fwd.io.rsDataOut
+      io.exOut.bcIn.pcAdd := false.B
+    }
+    io.exOut.bcIn.pcOpcode := instBDecoder.io.exBCOut.pcOpcode
   }
+  io.exOut.bcIn.pc := pIdReg.pc
 
-  when(decoder.io.rs2 === io.exWbIn.regWrite && io.exWbIn.regWriteEnable){
-    //printf("RS2 FORWARD FROM EX\n");
-    rs2Data := io.exWbIn.regWriteData
-  }.elsewhen(decoder.io.rs2 === io.memWbIn.regWrite && io.memWbIn.regWriteEnable){
-    //printf("RS2 FORWARD FROM MEM\n");
-    rs2Data := io.memWbIn.regWriteData
+  when(!instADecoder.io.inASel){
+    io.exOut.instAALU.inA := instARs1Fwd.io.rsDataOut
   }.otherwise{
-    //rs2Data := mainRegister.io.rs2Data
+    io.exOut.instAALU.inA := pIdReg.pc
   }
-
-  when((decoder.io.rs2 === io.exWbIn.regWrite||decoder.io.rs1 === io.exWbIn.regWrite) && io.exWbIn.regWriteEnable) {
-    stole := io.exMemIn.memRead
-  }
-
-
-  when(decoder.io.pcImmSel){
-    io.exOut.pcImm := decoder.io.pcImm
-    io.exOut.pcAdd := true.B
-  }.otherwise{
-    io.exOut.pcImm := rs1Data
-    io.exOut.pcAdd := false.B
-  }
-  when(!decoder.io.inASel){
-    io.exOut.inA := rs1Data
-  }.otherwise{
-    io.exOut.inA := pIdReg.pc
-  }
-  when(!decoder.io.inBSel){
-    io.exOut.inB := rs2Data
+  when(!instADecoder.io.inBSel){
+    io.exOut.instAALU.inB := instARs2Fwd.io.rsDataOut
   }.otherwise{
     //LUI
-    when(pIdReg.inst(5, 0) === "b000100".U(6.W)){
-      io.exOut.inB := Cat(decoder.io.imm(5, 0), 0.U(10.W))
+    when(pIdReg.instA(5, 0) === "b000100".U(6.W)){
+      io.exOut.instAALU.inB := Cat(instADecoder.io.imm(5, 0), 0.U(10.W))
     }.otherwise{
-      io.exOut.inB := decoder.io.imm
+      io.exOut.instAALU.inB := instADecoder.io.imm
     }
   }
 
-  io.memOut := decoder.io.memOut
-  io.memOut.in := rs2Data
-  io.wbOut := decoder.io.wbOut
+  when(!instBDecoder.io.inASel) {
+    io.exOut.instBALU.inA := instBRs1Fwd.io.rsDataOut
+  }.otherwise{
+    io.exOut.instBALU.inA := pIdReg.pc
+  }
+  when(!instBDecoder.io.inBSel){
+    io.exOut.instBALU.inB := instBRs2Fwd.io.rsDataOut
+  }.otherwise{
+    //LUI
+    when(pIdReg.instB(5, 0) === "b000100".U(6.W)){
+      io.exOut.instBALU.inB := Cat(instBDecoder.io.imm(5, 0), 0.U(10.W))
+    }.otherwise{
+      io.exOut.instBALU.inB := instBDecoder.io.imm
+    }
+  }
+
+  when(instADecoder.io.isMem){
+    io.memOut := instADecoder.io.memOut
+    io.memOut.in := instARs2Fwd.io.rsDataOut
+  }.otherwise{
+    io.memOut := instBDecoder.io.memOut
+    io.memOut.in := instBRs2Fwd.io.rsDataOut
+  }
+  io.memOut.instAMemRead := instADecoder.io.memOut.instAMemRead
+  io.memOut.instBMemRead := instBDecoder.io.memOut.instAMemRead
+
+  io.wbOut.instARegWrite := instADecoder.io.wbOut
+  io.wbOut.instBRegWrite := instBDecoder.io.wbOut
+  io.wbOut.finishFlag := instADecoder.io.isFinish | instBDecoder.io.isFinish
+  io.wbOut.pc := pIdReg.pc
+
   io.stole := stole
   io.regOut := mainRegister.io.regOut
 
@@ -472,18 +596,20 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
 
   when(stole){
     io.memOut.memWrite := false.B
-    io.memOut.memRead := false.B
-    io.wbOut.regWriteEnable := false.B
+    io.memOut.instAMemRead := false.B
+    io.memOut.instBMemRead := false.B
+    io.wbOut.instARegWrite.regWriteEnable := false.B
+    io.wbOut.instBRegWrite.regWriteEnable := false.B
     io.wbOut.finishFlag := false.B
-    io.exOut.pcOpcode := 0.U
+    io.exOut.bcIn.pcOpcode := 0.U
   }
 
   //io.testRegx8 := mainRegister.io.testRegx8
   io.wbOut.pc := io.idIn.pc
   when(conf.debugId.B){
     printf("[ID] PC Address:0x%x\n", pIdReg.pc)
-    printf("[ID] Instruction:0x%x\n", pIdReg.inst)
-    printf("[ID] Imm:0x%x\n", decoder.io.imm)
-    printf("[ID] RegWrite:0x%x\n", decoder.io.wbOut.regWrite)
+    //printf("[ID] Instruction:0x%x\n", pIdReg.inst)
+    //printf("[ID] Imm:0x%x\n", decoder.io.imm)
+    //printf("[ID] RegWrite:0x%x\n", decoder.io.wbOut.regWrite)
   }
 }
