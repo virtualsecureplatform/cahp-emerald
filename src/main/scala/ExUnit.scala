@@ -90,7 +90,8 @@ class ExUnit(implicit val conf:CAHPConfig) extends Module {
   }
 
   io.wbOut := pWbReg
-  //io.wbOut.regWriteData := io.out.res
+  io.wbOut.instARegWrite.regWriteData := io.out.instARes
+  io.wbOut.instBRegWrite.regWriteData := io.out.instBRes
 
   when(pExReg.bcIn.pcAdd) {
     io.out.jumpAddress := pExReg.bcIn.pc + pExReg.bcIn.pcImm

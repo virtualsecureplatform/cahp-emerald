@@ -109,7 +109,12 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
 
   io.out.fwdData := io.out.out
   io.wbOut := pWbReg
-  //io.wbOut.regWriteData := io.out.out
+
+  when(io.in.instAMemRead){
+    io.wbOut.instARegWrite.regWriteData := io.out.out
+  }.elsewhen(io.in.instBMemRead){
+    io.wbOut.instBRegWrite.regWriteData := io.out.out
+  }
 
   def sign_ext_8bit(v:UInt) : UInt = {
     val res = Wire(UInt(16.W))

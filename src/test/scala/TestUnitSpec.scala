@@ -8,7 +8,7 @@ class TestUnitSpec extends ChiselFlatSpec{
   conf.debugId = false
   conf.debugEx = false
   conf.debugMem = false
-  conf.debugWb = false
+  conf.debugWb = true
 
   conf.test = true
 
@@ -42,6 +42,13 @@ class TestUnitSpec extends ChiselFlatSpec{
           step(1)
           expect(c.io.exUnitOut.instARes, 1)
           expect(c.io.exUnitOut.instBRes, 2)
+          step(1)
+          expect(c.io.memWbOut.instARegWrite.regWrite, 0)
+          expect(c.io.memWbOut.instARegWrite.regWriteEnable, true)
+          expect(c.io.memWbOut.instARegWrite.regWriteData, 1)
+          expect(c.io.memWbOut.instBRegWrite.regWrite, 1)
+          expect(c.io.memWbOut.instBRegWrite.regWriteEnable, true)
+          expect(c.io.memWbOut.instBRegWrite.regWriteData, 2)
         }
     } should be (true)
   }

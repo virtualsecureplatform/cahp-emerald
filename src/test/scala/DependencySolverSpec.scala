@@ -2,12 +2,6 @@ import chisel3.iotesters.{ChiselFlatSpec, Driver, PeekPokeTester}
 
 class DependencySolverSpec extends ChiselFlatSpec {
   implicit val conf = CAHPConfig()
-  conf.debugIf = false
-  conf.debugId = false
-  conf.debugEx = false
-  conf.debugMem = false
-  conf.debugWb = false
-  conf.test = true
 
   behavior of "DependencySolver Test"
     it should "Do not Execute dependent instructions" in {
