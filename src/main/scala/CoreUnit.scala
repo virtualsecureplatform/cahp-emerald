@@ -49,7 +49,6 @@ class CoreUnit(implicit val conf: CAHPConfig) extends Module {
   ifUnit.io.in.jumpAddress := exUnit.io.out.jumpAddress
   ifUnit.io.in.romData := io.romData
 
-  io.testRegx8 := idwbUnit.io.testRegx8
   io.testFinish := DontCare
 
 

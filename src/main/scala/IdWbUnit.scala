@@ -62,7 +62,6 @@ class IdWbUnitPort (implicit val conf:CAHPConfig) extends Bundle {
   val debugImmLongState = if(conf.test) Output(Bool()) else Output(UInt(0.W))
   val testFinish = if (conf.test) Output(Bool()) else Output(UInt(0.W))
    */
-  val testRegx8 = if (conf.test) Output(UInt(16.W)) else Output(UInt(0.W))
 }
 
 class ForwardController(implicit val conf:CAHPConfig) extends Module{
@@ -167,13 +166,17 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
   instBRs2Fwd.io.instAMem := io.memWbIn.instARegWrite
   instBRs2Fwd.io.instBMem := io.memWbIn.instBRegWrite
 
+  val instAStole = Wire(Bool())
+  val instBStole = Wire(Bool())
+  instAStole := false.B
+  instBStole := false.B
   when(
       (instADecoder.io.rs1 === io.exWbIn.instARegWrite.regWrite)||
       (instADecoder.io.rs2 === io.exWbIn.instARegWrite.regWrite)||
       (instBDecoder.io.rs1 === io.exWbIn.instARegWrite.regWrite)||
       (instBDecoder.io.rs2 === io.exWbIn.instARegWrite.regWrite)
   ){
-    stole := stole || io.exMemIn.instAMemRead
+    instAStole := io.exMemIn.instAMemRead
   }
 
   when(
@@ -182,8 +185,10 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
       (instBDecoder.io.rs1 === io.exWbIn.instBRegWrite.regWrite)||
       (instBDecoder.io.rs2 === io.exWbIn.instBRegWrite.regWrite)
   ){
-    stole := stole || io.exMemIn.instBMemRead
+    instBStole := io.exMemIn.instBMemRead
   }
+
+  stole := instAStole | instBStole
 
   //Select Branch Address Source
   when(instADecoder.io.isJump){
@@ -238,6 +243,8 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
       io.exOut.instBALU.inB := instBDecoder.io.imm
     }
   }
+  io.exOut.selMem := instBDecoder.io.isMem
+  io.exOut.selJump := instBDecoder.io.isJump
 
   when(instADecoder.io.isMem){
     io.memOut := instADecoder.io.memOut
