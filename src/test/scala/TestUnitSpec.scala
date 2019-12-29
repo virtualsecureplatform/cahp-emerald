@@ -49,7 +49,7 @@ class TestUnitSpec extends ChiselFlatSpec{
           expect(c.io.memWbOut.instBRegWrite.regWrite, 1)
           expect(c.io.memWbOut.instBRegWrite.regWriteEnable, true)
           expect(c.io.memWbOut.instBRegWrite.regWriteData, 2)
-          //step(1)
+          step(1)
         }
     } should be (true)
   }

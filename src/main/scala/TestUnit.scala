@@ -34,12 +34,9 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   idWbUnit.io.exMemIn := DontCare
   idWbUnit.io.exMemIn.instAMemRead := false.B
   idWbUnit.io.exMemIn.instBMemRead := false.B
-  idWbUnit.io.exWbIn := DontCare
-  idWbUnit.io.exWbIn.instARegWrite.regWriteEnable := false.B
-  idWbUnit.io.exWbIn.instBRegWrite.regWriteEnable := false.B
-  idWbUnit.io.memWbIn := DontCare
-  idWbUnit.io.memWbIn.instARegWrite.regWriteEnable := false.B
-  idWbUnit.io.memWbIn.instBRegWrite.regWriteEnable := false.B
+  idWbUnit.io.exWbIn := exUnit.io.wbOut
+  idWbUnit.io.memWbIn := memUnit.io.wbOut
+
   idWbUnit.io.idEnable := true.B
   idWbUnit.io.wbEnable := true.B
   idWbUnit.io.flush := false.B

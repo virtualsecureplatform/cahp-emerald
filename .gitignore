@@ -11,3 +11,4 @@ test_run_dir
 .attach*
 .~lock*
 utils/test*
+utils/gen.sh
