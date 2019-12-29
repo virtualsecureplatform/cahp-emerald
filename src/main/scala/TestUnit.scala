@@ -21,32 +21,29 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
 
   ifUnit.io.in.romData := rom.io.romData
 
-  ifUnit.io.in.jumpAddress := 0.U
-  ifUnit.io.in.jump := false.B
+  ifUnit.io.in.jumpAddress := exUnit.io.out.jumpAddress
+  ifUnit.io.in.jump := exUnit.io.out.jump
   ifUnit.io.enable := true.B
 
   rom.io.romAddress := ifUnit.io.out.romAddress
 
   idWbUnit.io.idIn.instA := ifUnit.io.out.instAOut
   idWbUnit.io.idIn.instB := ifUnit.io.out.instBOut
-  idWbUnit.io.idIn.pc := DontCare
+  idWbUnit.io.idIn.pc := ifUnit.io.out.pcAddress
 
-  idWbUnit.io.exMemIn := DontCare
-  idWbUnit.io.exMemIn.instAMemRead := false.B
-  idWbUnit.io.exMemIn.instBMemRead := false.B
+  idWbUnit.io.exMemIn := exUnit.io.memOut
   idWbUnit.io.exWbIn := exUnit.io.wbOut
   idWbUnit.io.memWbIn := memUnit.io.wbOut
 
   idWbUnit.io.idEnable := true.B
   idWbUnit.io.wbEnable := true.B
-  idWbUnit.io.flush := false.B
-
+  idWbUnit.io.flush := exUnit.io.out.jump
 
   exUnit.io.in := idWbUnit.io.exOut
   exUnit.io.memIn := idWbUnit.io.memOut
   exUnit.io.wbIn := idWbUnit.io.wbOut
   exUnit.io.enable := true.B
-  exUnit.io.flush := false.B
+  exUnit.io.flush := exUnit.io.out.jump
 
   memUnit.io.in := exUnit.io.memOut
   memUnit.io.wbIn := exUnit.io.wbOut

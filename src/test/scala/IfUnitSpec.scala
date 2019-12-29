@@ -40,7 +40,6 @@ class IfUnitSpec extends ChiselFlatSpec {
           expect(c.io.testRomCacheState, romCacheStateType.NotLoaded)
           expect(c.io.out.instAOut, TestUtils.genADD(0, 1, 2))
           expect(c.io.out.instBOut, TestUtils.genADD(1, 2, 3))
-          expect(c.io.out.execB, true)
           expect(c.io.out.romAddress, 0)
           expect(c.io.out.pcAddress, 3)
           expect(c.io.out.stole, false)
@@ -58,7 +57,6 @@ class IfUnitSpec extends ChiselFlatSpec {
           expect(c.io.out.instAOut, TestUtils.genADD(2, 3, 4))
           var instB = peek(c.io.out.instBOut) & 0xFFFF
           assert(instB == TestUtils.genADD2(3, 4))
-          expect(c.io.out.execB, true.B)
 
           step(1)
           val rom3 = TestUtils.genADD(5, 6, 7) |
@@ -69,7 +67,6 @@ class IfUnitSpec extends ChiselFlatSpec {
           expect(c.io.out.pcAddress, 11.U)
           expect(c.io.out.romAddress, 2.U)
           expect(c.io.out.instAOut, TestUtils.genADD(4, 5, 6))
-          expect(c.io.out.execB, false.B)
 
           step(1)
           expect(c.io.testRomCacheState, romCacheStateType.Loaded)
@@ -78,7 +75,6 @@ class IfUnitSpec extends ChiselFlatSpec {
           var instA = peek(c.io.out.instAOut) & 0xFFFF
           assert(instA == TestUtils.genADD2(4, 5))
           expect(c.io.out.instBOut, TestUtils.genADD(5, 6, 7))
-          expect(c.io.out.execB, true.B)
         }
     } should be (true)
   }

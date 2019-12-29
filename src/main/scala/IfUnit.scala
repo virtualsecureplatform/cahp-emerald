@@ -36,7 +36,6 @@ class IfUnitOut(implicit val conf: CAHPConfig) extends Bundle {
 
   val instAOut = Output(UInt(24.W))
   val instBOut = Output(UInt(24.W))
-  val execB = Output(Bool())
 
   val romData = Output(UInt(64.W))
   val stole = Output(Bool())
@@ -87,7 +86,6 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
 
   depSolver.io.instA := io.out.instAOut
   depSolver.io.instB := instBOut
-  io.out.execB := depSolver.io.execB
 
   // **** Test I/O Connection ****
   io.testRomCacheState := romCacheState
@@ -148,7 +146,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   stole := false.B
 
   when(isLong){
-    when(io.out.execB) {
+    when(depSolver.io.execB) {
       when(isInstBLong){
         pc.io.pcDiff := 6.U
       }.otherwise{
@@ -158,7 +156,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
       pc.io.pcDiff := 3.U
     }
   }.otherwise{
-    when(io.out.execB) {
+    when(depSolver.io.execB) {
       when(isInstBLong){
         pc.io.pcDiff := 5.U
       }.otherwise{
@@ -331,7 +329,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   when(depSolver.io.execB){
     io.out.instBOut := instBOut
   }.otherwise{
-    io.out.instBOut := DontCare
+    io.out.instBOut := 0.U
   }
 
   when(conf.debugIf.B){
