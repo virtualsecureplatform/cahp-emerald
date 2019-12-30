@@ -298,6 +298,8 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
           when(pc.io.pcOut(2, 0) === 5.U || pc.io.pcOut(2, 0) === 6.U || pc.io.pcOut(2, 0) === 7.U) {
             romCache := romData
             instBLoadFromCache := false.B
+          }.elsewhen(pc.io.pcOut(2, 0) === 4.U){
+            romCache := romData
           }.otherwise {
             romCache := romCache
           }
@@ -306,6 +308,8 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
           when(pc.io.pcOut(2, 0) === 6.U || pc.io.pcOut(2, 0) === 7.U) {
             romCache := romData
             instBLoadFromCache := false.B
+          }.elsewhen(pc.io.pcOut(2, 0) === 5.U){
+            romCache := romData
           }.otherwise {
             romCache := romCache
           }
