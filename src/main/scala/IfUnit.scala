@@ -44,6 +44,7 @@ class IfUnitOut(implicit val conf: CAHPConfig) extends Bundle {
 class IfUnitPort(implicit val conf: CAHPConfig) extends Bundle {
   val in = new IfUnitIn
   val out = new IfUnitOut
+  val idStole = Input(Bool())
   val enable = Input(Bool())
 
   val testRomCacheState = if (conf.test) Output(Bool()) else Output(UInt(0.W))
@@ -74,7 +75,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   // **** I/O Connection ****
   pc.io.jumpAddress := io.in.jumpAddress
   pc.io.jump := io.in.jump
-  pc.io.enable := io.enable
+  pc.io.enable := io.enable&(!stole)
 
   when(depSolver.io.execB){
     io.out.pcAddress := instBAddr
@@ -143,7 +144,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   io.out.romData := romData
 
   instBLoadable := false.B
-  stole := false.B
+  stole := io.idStole
 
   when(isLong){
     when(depSolver.io.execB) {

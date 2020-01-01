@@ -35,7 +35,7 @@ class VSPCore() extends Module{
   val memA = Module(new ExternalRam)
   val memB = Module(new ExternalRam)
 
-  io.finishFlag := coreUnit.io.finishFlag
+  //io.finishFlag := coreUnit.io.finishFlag
   io.regOut := coreUnit.io.regOut
 
   io.romAddr := coreUnit.io.romAddr

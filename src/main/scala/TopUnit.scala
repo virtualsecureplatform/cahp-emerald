@@ -31,7 +31,7 @@ class TopUnit(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt])(implicit val c
 
   rom.io.romAddress := core.io.romAddr
   core.io.romData := rom.io.romData
-  core.io.load := io.load
+  //core.io.load := io.load
 
 
   memA.io.load := io.load
@@ -46,6 +46,6 @@ class TopUnit(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt])(implicit val c
   memB.io.writeEnable := core.io.memB.writeEnable
   core.io.memB.out := memB.io.out
 
-  io.testRegx8 := core.io.testRegx8
-  io.finishFlag := core.io.finishFlag
+  //io.testRegx8 := core.io.testRegx8
+  //io.finishFlag := core.io.finishFlag
 }

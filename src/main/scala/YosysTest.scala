@@ -35,10 +35,10 @@ class YosysTest(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt]) extends Modu
   val coreUnit = Module(new CoreUnit)
   val memA = Module(new ExternalTestRam(memAInit))
   val memB = Module(new ExternalTestRam(memBInit))
-  io.testRegx8 := coreUnit.io.testRegx8
-  io.testRegWrite := coreUnit.io.testRegWrite
-  io.testRegWriteEnable := coreUnit.io.testRegWriteEnable
-  io.testRegWriteData := coreUnit.io.testRegWriteData
+  //io.testRegx8 := coreUnit.io.testRegx8
+  //io.testRegWrite := coreUnit.io.testRegWrite
+  //io.testRegWriteEnable := coreUnit.io.testRegWriteEnable
+  //io.testRegWriteData := coreUnit.io.testRegWriteData
 
   io.romAddr := coreUnit.io.romAddr
   coreUnit.io.romData := io.romData
