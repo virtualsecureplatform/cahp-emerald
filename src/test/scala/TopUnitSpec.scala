@@ -21,23 +21,24 @@ import chisel3.iotesters.{ChiselFlatSpec, Driver, PeekPokeTester}
 class TopUnitSpec() extends ChiselFlatSpec {
   implicit val conf = CAHPConfig()
   conf.debugIf = false
-  conf.debugId = true
+  conf.debugId = false
   conf.debugEx = false
   conf.debugMem = false
-  conf.debugWb = false
+  conf.debugWb = true
   conf.test = true
 
 
-  val parser = new TestBinParser("src/test/binary/fib.bin")
+  val parser = new TestBinParser("src/test/binary/li-1.bin")
   conf.testRom = parser.romSeq
   println(parser.romSeq)
-  assert(Driver(() => new YosysTest2(parser.memASeq, parser.memBSeq)) {
+  assert(Driver(() => new TopUnit()) {
     c =>
       new PeekPokeTester(c) {
-        for (i <- 0 until 60) {
+        for (i <- 0 until parser.cycle) {
           step(1)
         }
-        expect(c.io.testRegx8, 55)
+        expect(c.io.regOut.x8, parser.res)
+        expect(c.io.finishFlag, true)
       }
 
   })
