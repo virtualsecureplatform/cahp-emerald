@@ -17,7 +17,7 @@ limitations under the License.
 import chisel3._
 
 class CoreUnitPort(implicit val conf:CAHPConfig) extends Bundle {
-  val romData = Input(UInt(32.W))
+  val romData = Input(UInt(64.W))
   val romAddr = Output(UInt(conf.romAddrWidth.W))
   val memA = Flipped(new MemPort(conf))
   val memB = Flipped(new MemPort(conf))
@@ -50,7 +50,7 @@ class CoreUnit(implicit val conf: CAHPConfig) extends Module {
   idwbUnit.io.exMemIn := exUnit.io.memOut
   idwbUnit.io.exWbIn := exUnit.io.wbOut
   idwbUnit.io.memWbIn := memUnit.io.wbOut
-  idwbUnit.io.flush := exUnit.io.out.jump
+  idwbUnit.io.flush := false.B
   idwbUnit.io.idEnable := true.B
   idwbUnit.io.wbEnable := true.B
 

@@ -1,6 +1,6 @@
 object TestUtils {
   def genSimm11(imm:Int):Int = {
-    if(imm > 0){
+    if(imm > -1){
       imm&0x3FF
     }else{
       (imm&0x3FF)|0x400
@@ -8,7 +8,7 @@ object TestUtils {
   }
 
   def genSimm10(imm:Int):Int = {
-    if(imm > 0){
+    if(imm > -1){
       imm&0x1FF
     }else{
       (imm&0x1FF)|0x200
@@ -16,7 +16,7 @@ object TestUtils {
   }
 
   def genSimm6(imm:Int):Int = {
-    if(imm > 0){
+    if(imm > -1){
       imm&0x1F
     }else{
       (imm&0x1F)|0x20

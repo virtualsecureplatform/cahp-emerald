@@ -80,7 +80,11 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   when(depSolver.io.execB){
     io.out.pcAddress := instBAddr
   }.otherwise{
-    io.out.pcAddress := pc.io.pcOut
+    when(io.in.jump){
+      io.out.pcAddress := pc.io.jumpAddress
+    }.otherwise{
+      io.out.pcAddress := pc.io.pcOut
+    }
   }
 
   io.out.stole := stole

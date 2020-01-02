@@ -15,5 +15,3 @@ $LLVM_CC -Oz -target cahp $SOURCE_FILE -o $OBJ_FILE --sysroot=$CAHP_RUNTIME -nos
 echo $BIN_FILE
 
 $CONVERTER $OBJ_FILE > $BIN_FILE
-
-rm $OBJ_FILE

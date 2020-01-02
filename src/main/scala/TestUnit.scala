@@ -23,6 +23,7 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
 
   ifUnit.io.in.jumpAddress := exUnit.io.out.jumpAddress
   ifUnit.io.in.jump := exUnit.io.out.jump
+  ifUnit.io.idStole := idWbUnit.io.stole
   ifUnit.io.enable := true.B
 
   rom.io.romAddress := ifUnit.io.out.romAddress
@@ -37,7 +38,7 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
 
   idWbUnit.io.idEnable := true.B
   idWbUnit.io.wbEnable := true.B
-  idWbUnit.io.flush := exUnit.io.out.jump
+  idWbUnit.io.flush := false.B
 
   exUnit.io.in := idWbUnit.io.exOut
   exUnit.io.memIn := idWbUnit.io.memOut

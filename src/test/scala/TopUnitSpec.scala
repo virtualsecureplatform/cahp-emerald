@@ -28,19 +28,25 @@ class TopUnitSpec() extends ChiselFlatSpec {
   conf.test = true
 
 
-  val parser = new TestBinParser("src/test/binary/li-1.bin")
-  conf.testRom = parser.romSeq
-  println(parser.romSeq)
-  assert(Driver(() => new TopUnit()) {
-    c =>
-      new PeekPokeTester(c) {
-        for (i <- 0 until parser.cycle) {
-          step(1)
-        }
-        expect(c.io.regOut.x8, parser.res)
-        expect(c.io.finishFlag, true)
-      }
+  val testDir = new File("src/test/binary/")
+  testDir.listFiles().foreach{f =>
+    if(f.getName().contains(".bin")){
+      println(f.getName())
+      val parser = new TestBinParser(f.getAbsolutePath())
+      conf.testRom = parser.romSeq
+      println(parser.romSeq)
+      assert(Driver(() => new TopUnit()) {
+        c =>
+          new PeekPokeTester(c) {
+            for (i <- 0 until parser.cycle) {
+              step(1)
+            }
+            expect(c.io.regOut.x8, parser.res)
+            expect(c.io.finishFlag, true)
+          }
 
-  })
+      })
+    }
+  }
 }
 
