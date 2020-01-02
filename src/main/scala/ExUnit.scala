@@ -83,7 +83,7 @@ class ExUnit(implicit val conf:CAHPConfig) extends Module {
   io.out.instBRes := instBALU.io.out.out
 
   io.memOut := pMemReg
-  when(!io.in.selMem){
+  when(!pExReg.selMem){
     io.memOut.address := io.out.instARes
   }.otherwise{
     io.memOut.address := io.out.instBRes
@@ -103,7 +103,7 @@ class ExUnit(implicit val conf:CAHPConfig) extends Module {
   val flagOverflow = Wire(Bool())
   val flagSign = Wire(Bool())
   val flagZero = Wire(Bool())
-  when(!io.in.selJump){
+  when(!pExReg.selJump){
     flagCarry := instAALU.io.out.flagCarry
     flagOverflow := instAALU.io.out.flagOverflow
     flagSign := instAALU.io.out.flagSign
