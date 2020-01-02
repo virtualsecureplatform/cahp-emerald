@@ -110,9 +110,9 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
   io.out.fwdData := io.out.out
   io.wbOut := pWbReg
 
-  when(io.in.instAMemRead){
+  when(pMemReg.instAMemRead){
     io.wbOut.instARegWrite.regWriteData := io.out.out
-  }.elsewhen(io.in.instBMemRead){
+  }.elsewhen(pMemReg.instBMemRead){
     io.wbOut.instBRegWrite.regWriteData := io.out.out
   }
 
@@ -181,7 +181,6 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
   }
 
   when(conf.debugMem.B){
-    printf("[MEM] MemOut:0x%x\n", io.out.out)
     when(pMemReg.instAMemRead) {
       printf("[instA MEM] MemRead Mem[0x%x] => Data:0x%x\n", pMemReg.address, io.out.out)
     }

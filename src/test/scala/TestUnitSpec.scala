@@ -7,12 +7,12 @@ class TestUnitSpec extends ChiselFlatSpec{
   conf.debugIf = false
   conf.debugId = false
   conf.debugEx = false
-  conf.debugMem = false
+  conf.debugMem = true
   conf.debugWb = true
 
   conf.test = true
 
-  val testFile = new File("src/test/binary/beq-2.bin")
+  val testFile = new File("src/test/binary/swsp-1.bin")
   println(testFile.getName())
   val parser = new TestBinParser(testFile.getAbsolutePath())
   println(parser.romSeq)
@@ -24,29 +24,13 @@ class TestUnitSpec extends ChiselFlatSpec{
     Driver.execute(Array(""), () => new TestUnit){
       c =>
         new PeekPokeTester(c) {
-          expect(c.io.ifOut.instAOut, TestUtils.genLI(1, 2))
-          expect(c.io.ifOut.instBOut, TestUtils.genLI(2, 1))
+          expect(c.io.ifOut.instAOut, TestUtils.genLI(1, 4))
+          expect(c.io.ifOut.instBOut, TestUtils.genLI(0, 0x2A))
           step(1)
-          expect(c.io.ifOut.instAOut, TestUtils.genBEQ(1,2,8))
+          val instA = peek(c.io.ifOut.instAOut)&0xFFFF
+          assert(instA == TestUtils.genSWSP(0, 2))
           expect(c.io.ifOut.instBOut, 0)
-          step(1)
-          expect(c.io.exOut.instAALU.inA, 2)
-          expect(c.io.exOut.instAALU.inB, 1)
-          expect(c.io.exOut.bcIn.pcOpcode, 1)
-          expect(c.io.exOut.instAALU.opcode, 1)
-          expect(c.io.exOut.selJump, false)
-          step(1)
-          expect(c.io.exUnitOut.jump, false)
-          expect(c.io.exUnitOut.instARes, 1)
-          /*
-          expect(c.io.ifOut.instAOut, TestUtils.genLI(4, 1))
-          expect(c.io.ifOut.instBOut, TestUtils.genLI(5, 2))
-          step(1)
-          val instA1 = peek(c.io.ifOut.instAOut)&0xFFFF
-          val instB1 = peek(c.io.ifOut.instBOut)&0xFFFF
-          assert(instA1 == TestUtils.genADD2(2, 4))
-          assert(instB1 == TestUtils.genADD2(3, 5))
-           */
+          step(2)
           step(100)
           expect(c.io.wbOut.finishFlag, true)
         }

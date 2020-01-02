@@ -18,6 +18,8 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   val exUnit = Module(new ExUnit())
   val memUnit = Module(new MemUnit())
   val rom = Module(new ExternalTestRom)
+  val memA = Module(new ExternalRam())
+  val memB = Module(new ExternalRam())
 
   ifUnit.io.in.romData := rom.io.romData
 
@@ -49,8 +51,16 @@ class TestUnit(implicit val conf: CAHPConfig) extends Module{
   memUnit.io.in := exUnit.io.memOut
   memUnit.io.wbIn := exUnit.io.wbOut
   memUnit.io.enable := true.B
-  memUnit.io.memA.out := DontCare
-  memUnit.io.memB.out := DontCare
+
+  memA.io.address := memUnit.io.memA.address
+  memA.io.in := memUnit.io.memA.in
+  memA.io.writeEnable := memUnit.io.memA.writeEnable
+  memUnit.io.memA.out := memA.io.out
+
+  memB.io.address := memUnit.io.memB.address
+  memB.io.in := memUnit.io.memB.in
+  memB.io.writeEnable := memUnit.io.memB.writeEnable
+  memUnit.io.memB.out := memB.io.out
 
   idWbUnit.io.wbIn := memUnit.io.wbOut
 

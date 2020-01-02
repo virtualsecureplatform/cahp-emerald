@@ -23,7 +23,7 @@ class TopUnitSpec() extends ChiselFlatSpec {
   conf.debugIf = false
   conf.debugId = false
   conf.debugEx = false
-  conf.debugMem = false
+  conf.debugMem = true
   conf.debugWb = true
   conf.test = true
 
