@@ -5,6 +5,7 @@ class PCPort(implicit val conf: CAHPConfig) extends Bundle {
   val pcDiff = Input(UInt(3.W))
   val jump = Input(Bool())
   val enable = Input(Bool())
+  val stole = Input(Bool())
   val pcOut = Output(UInt(conf.romAddrWidth.W))
 }
 
@@ -22,10 +23,18 @@ class PC(implicit val conf: CAHPConfig) extends Module {
   //**** Sequential Circuit ****
   regPC := regPC
   when(io.enable) {
-    when(io.jump === false.B) {
-      regPC := regPC + io.pcDiff
+    when(io.stole){
+      when(io.jump === false.B) {
+        regPC := regPC
+      }.otherwise {
+        regPC := io.jumpAddress
+      }
     }.otherwise {
-      regPC := io.jumpAddress + io.pcDiff
+      when(io.jump === false.B) {
+        regPC := regPC + io.pcDiff
+      }.otherwise {
+        regPC := io.jumpAddress + io.pcDiff
+      }
     }
   }
 }

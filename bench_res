@@ -1,0 +1,4 @@
+0002-fib.c
+sim:246
+diamond:481(0.51 inst / clock)
+emerald:259(0.95 inst / clock)

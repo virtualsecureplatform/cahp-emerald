@@ -76,7 +76,8 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   // **** I/O Connection ****
   pc.io.jumpAddress := io.in.jumpAddress
   pc.io.jump := io.in.jump
-  pc.io.enable := io.enable&(!stole)
+  pc.io.enable := io.enable
+  pc.io.stole := stole
 
   when(depSolver.io.execB){
     io.out.pcAddress := instBAddr
@@ -307,7 +308,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
             romCache := romData
             instBLoadFromCache := false.B
           }.elsewhen(pc.io.pcOut(2, 0) === 4.U){
-            romCache := romData
+            romCache := romCache
           }.otherwise {
             romCache := romCache
           }

@@ -18,19 +18,21 @@ import java.io.File
 
 import chisel3.iotesters.{ChiselFlatSpec, Driver, PeekPokeTester}
 
+import scala.util.control.Breaks
+
 class TopUnitSpec() extends ChiselFlatSpec {
   implicit val conf = CAHPConfig()
   conf.debugIf = false
   conf.debugId = false
   conf.debugEx = false
   conf.debugMem = false
-  conf.debugWb = true
+  conf.debugWb = false
   conf.test = true
 
 
   val testDir = new File("src/test/binary/")
   testDir.listFiles().foreach{f =>
-    if(f.getName().contains("0002-fib.bin")){
+    if(f.getName().contains(".bin")){
       println(f.getName())
       val parser = new TestBinParser(f.getAbsolutePath())
       conf.testRom = parser.romSeq
@@ -38,15 +40,19 @@ class TopUnitSpec() extends ChiselFlatSpec {
       assert(Driver(() => new TopUnit()) {
         c =>
           new PeekPokeTester(c) {
-            for (i <- 0 until parser.cycle) {
-              step(1)
+            val b = new Breaks
+            b.breakable{
+              for (i <- 0 until parser.cycle) {
+                step(1)
+                if(peek(c.io.finishFlag) == 1){
+                  printf("CYCLE:%d\n", i)
+                  b.break
+                }
+              }
             }
             expect(c.io.regOut.x8, parser.res)
-            expect(c.io.finishFlag, true)
           }
-
       })
     }
   }
 }
-
