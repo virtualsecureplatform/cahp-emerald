@@ -33,11 +33,14 @@ class TestBinParser(filePath: String) {
     }
   }
 
+  def asUnsigned(unsignedLong: Long) =
+    (BigInt(unsignedLong >>> 1) << 1) + (unsignedLong & 1)
+
   def parseLine(line:String){
     val tokens = line.split(" ", 0)
     if(tokens.length == 3){
       val addr = BigInt(java.lang.Long.parseUnsignedLong(tokens(1), 16))
-      val data = BigInt(java.lang.Long.parseUnsignedLong(tokens(2), 16))
+      val data = asUnsigned(java.lang.Long.parseUnsignedLong(tokens(2), 16))
       if(tokens(0).contains("ROM")){
         romData += (addr->data)
       }

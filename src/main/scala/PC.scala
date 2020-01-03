@@ -25,7 +25,7 @@ class PC(implicit val conf: CAHPConfig) extends Module {
     when(io.jump === false.B) {
       regPC := regPC + io.pcDiff
     }.otherwise {
-      regPC := io.jumpAddress
+      regPC := io.jumpAddress + io.pcDiff
     }
   }
 }

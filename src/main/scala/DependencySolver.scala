@@ -57,6 +57,10 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
         when(instBType === InstructionCategory.InstM) {
           when((instBRd === instARd)) {
             io.execB := false.B
+          }.otherwise{
+            when(instARd === 1.U){
+              io.execB := false.B
+            }
           }
         }.elsewhen(instBType === InstructionCategory.InstR) {
           when((instBRd === instARd) || (instBRs1 === instARd)) {
@@ -100,10 +104,14 @@ class DependencySolver(implicit val conf:CAHPConfig) extends Module {
       }
     }.otherwise{
       when(instBType === InstructionCategory.InstM){
-        when((instBRd === instARd)){
+        when((instBRd === instARd)) {
           io.execB := false.B
+        }.otherwise{
+          when(instARd === 1.U){
+            io.execB := false.B
+          }
         }
-      }.elsewhen(instBType === InstructionCategory.InstR){
+    }.elsewhen(instBType === InstructionCategory.InstR){
         when((instBRd === instARd) || (instBRs1 === instARd )){
           io.execB := false.B
         }

@@ -38,6 +38,7 @@ class IfUnitOut(implicit val conf: CAHPConfig) extends Bundle {
   val instBOut = Output(UInt(24.W))
 
   val romData = Output(UInt(64.W))
+  val romCache = Output(UInt(64.W))
   val stole = Output(Bool())
 }
 
@@ -81,7 +82,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
     io.out.pcAddress := instBAddr
   }.otherwise{
     when(io.in.jump){
-      io.out.pcAddress := pc.io.jumpAddress
+      io.out.pcAddress := io.in.jumpAddress
     }.otherwise{
       io.out.pcAddress := pc.io.pcOut
     }
@@ -95,6 +96,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   // **** Test I/O Connection ****
   io.testRomCacheState := romCacheState
   io.testRomCache := romCache
+  io.out.romCache := romCache
 
 
 
@@ -151,7 +153,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   stole := io.idStole
 
   when(isLong){
-    when(depSolver.io.execB) {
+    when(depSolver.io.execB&instBLoadable) {
       when(isInstBLong){
         pc.io.pcDiff := 6.U
       }.otherwise{
@@ -161,7 +163,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
       pc.io.pcDiff := 3.U
     }
   }.otherwise{
-    when(depSolver.io.execB) {
+    when(depSolver.io.execB&instBLoadable) {
       when(isInstBLong){
         pc.io.pcDiff := 5.U
       }.otherwise{
@@ -171,6 +173,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
       pc.io.pcDiff := 2.U
     }
   }
+
 
   instBAddr := DontCare
   when(io.enable) {
