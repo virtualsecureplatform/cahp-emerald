@@ -12,3 +12,5 @@ test_run_dir
 .~lock*
 utils/test*
 utils/gen.sh
+utils/cpu-dump
+utils/sim-dump
