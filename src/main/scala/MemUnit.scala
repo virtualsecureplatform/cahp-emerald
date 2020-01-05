@@ -17,24 +17,28 @@ limitations under the License.
 import chisel3._
 import chisel3.util.Cat
 
-class MemPort(val conf:CAHPConfig) extends Bundle {
-  val in = Input(UInt(8.W))
-  val address = Input(UInt(16.W))
-  val writeEnable = Input(Bool())
-  val out = Output(UInt(8.W))
-  val load = Input(Bool())
+class MemPortIn(implicit val conf:CAHPConfig) extends Bundle {
+  val in = UInt(8.W)
+  val address = UInt(16.W)
+  val writeEnable = Bool()
+  val load = Bool()
 
-  override def cloneType: this.type = new MemPort(conf).asInstanceOf[this.type]
+  override def cloneType: this.type = new MemPortIn().asInstanceOf[this.type]
+}
+
+class MemPort(implicit val conf:CAHPConfig) extends Bundle {
+  val in = Input(new MemPortIn)
+  val out = Output(UInt(8.W))
 }
 
 class MemUnitIn (implicit val conf:CAHPConfig) extends Bundle {
-  val in =  Input(UInt(16.W))
-  val address = Input(UInt(16.W))
-  val instAMemRead = Input(Bool())
-  val instBMemRead = Input(Bool())
-  val memWrite = Input(Bool())
-  val byteEnable = Input(Bool())
-  val signExt = Input(Bool())
+  val in =  UInt(16.W)
+  val address = UInt(16.W)
+  val instAMemRead = Bool()
+  val instBMemRead = Bool()
+  val memWrite = Bool()
+  val byteEnable = Bool()
+  val signExt = Bool()
 }
 
 class MemUnitOut (implicit val conf:CAHPConfig) extends Bundle {
@@ -44,13 +48,13 @@ class MemUnitOut (implicit val conf:CAHPConfig) extends Bundle {
 }
 
 class MemUnitPort (implicit val conf:CAHPConfig) extends Bundle {
-  val in = new MemUnitIn
+  val in = Input(new MemUnitIn)
   val out = new MemUnitOut
-  val wbIn = new WbUnitIn
+  val wbIn = Input(new WbUnitIn)
 
-  val memA = Flipped(new MemPort(conf))
-  val memB = Flipped(new MemPort(conf))
-  val wbOut = Flipped(new WbUnitIn)
+  val memA = Flipped(new MemPort())
+  val memB = Flipped(new MemPort())
+  val wbOut = Output(new WbUnitIn)
 
   val enable = Input(Bool())
 }
@@ -71,8 +75,8 @@ class MemUnitTestPort extends Bundle{
 class MemUnitTest(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt])(implicit val conf:CAHPConfig) extends Module {
   val io = IO(new MemUnitTestPort)
   val unit = Module(new MemUnit)
-  val memA = Module(new ExternalTestRam(memAInit))
-  val memB = Module(new ExternalTestRam(memBInit))
+  val memA = Module(new ExternalRam(false, ""))
+  val memB = Module(new ExternalRam(false, ""))
 
 
   unit.io.in.in := io.in
@@ -83,15 +87,9 @@ class MemUnitTest(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt])(implicit v
   unit.io.in.byteEnable := io.byteEnable
   unit.io.in.signExt := io.signExt
   unit.io.enable := io.Enable
-  memA.io.address := unit.io.memA.address
   memA.io.in := unit.io.memA.in
-  memA.io.writeEnable := unit.io.memA.writeEnable
-  memA.io.load := false.B
   unit.io.memA.out := memA.io.out
-  memB.io.address := unit.io.memB.address
-  memB.io.in := unit.io.memB.in
-  memB.io.writeEnable := unit.io.memB.writeEnable
-  memB.io.load := false.B
+  memB.io.in := unit.io.memB.in.in
   unit.io.memB.out := memB.io.out
   io.out := unit.io.out.out
 }
@@ -131,29 +129,29 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
   val data_lower = io.in.in(7, 0)
   addr := io.in.address(8,1)
 
-  io.memA.address := addr
-  io.memB.address := addr
-  io.memA.in := data_upper
-  io.memB.in := data_lower
-  io.memA.writeEnable := false.B
-  io.memB.writeEnable := false.B
-  io.memA.load := DontCare
-  io.memB.load := DontCare
+  io.memA.in.address := addr
+  io.memB.in.address := addr
+  io.memA.in.in := data_upper
+  io.memB.in.in := data_lower
+  io.memA.in.writeEnable := false.B
+  io.memB.in.writeEnable := false.B
+  io.memA.in.load := DontCare
+  io.memB.in.load := DontCare
 
   when(io.in.byteEnable){
     when(io.in.memWrite){
       when(io.in.address(0) === 1.U) {
-        io.memA.writeEnable := true.B&io.enable
-        io.memA.in := data_lower
+        io.memA.in.writeEnable := true.B&io.enable
+        io.memA.in.in := data_lower
       }.otherwise {
-        io.memB.writeEnable := true.B&io.enable
-        io.memB.in := data_lower
+        io.memB.in.writeEnable := true.B&io.enable
+        io.memB.in.in := data_lower
       }
     }
   }.otherwise {
     when(io.in.memWrite) {
-      io.memA.writeEnable := true.B&io.enable
-      io.memB.writeEnable := true.B&io.enable
+      io.memA.in.writeEnable := true.B&io.enable
+      io.memB.in.writeEnable := true.B&io.enable
     }
   }
 

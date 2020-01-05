@@ -1,9 +1,9 @@
 import chisel3._
 
 class ALUPortIn(implicit val conf:CAHPConfig) extends Bundle {
-  val inA = Input(UInt(16.W))
-  val inB = Input(UInt(16.W))
-  val opcode = Input(UInt(4.W))
+  val inA = UInt(16.W)
+  val inB = UInt(16.W)
+  val opcode = UInt(4.W)
 }
 
 class ALUPortOut(implicit val conf:CAHPConfig) extends Bundle {
@@ -15,7 +15,7 @@ class ALUPortOut(implicit val conf:CAHPConfig) extends Bundle {
 }
 
 class ALUPort(implicit val conf:CAHPConfig) extends Bundle{
-  val in = new ALUPortIn()
+  val in = Input(new ALUPortIn())
   val out = new ALUPortOut()
 }
 

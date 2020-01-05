@@ -244,7 +244,7 @@ object DecoderUtils {
   def getInstructionCategory(inst:UInt): UInt = {
     val instCategory = Wire(UInt(2.W))
     when(inst(2,1) === InstructionCategory.InstM){
-      when(inst(5,0) === UInt("b110101") || inst(5, 0) === UInt("b110100")){
+      when(inst(5,0) === "b110101".U || inst(5, 0) === "b110100".U){
         instCategory := InstructionCategory.InstI
       }.otherwise{
         instCategory := InstructionCategory.InstM

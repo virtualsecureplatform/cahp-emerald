@@ -19,27 +19,27 @@ import chisel3._
 class TopUnitPort(implicit val conf:CAHPConfig) extends Bundle {
   val finishFlag = Output(Bool())
   val regOut = new MainRegisterOutPort()
+
+  val load = Input(Bool())
 }
 
-class TopUnit(implicit val conf:CAHPConfig) extends Module{
+class TopUnit(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt])(implicit val conf:CAHPConfig) extends Module{
   val io = IO(new TopUnitPort)
   val core = Module(new CoreUnit)
   val rom = Module(new ExternalTestRom())
-  val memA = Module(new ExternalRam())
-  val memB = Module(new ExternalRam())
+  val memA = Module(new ExternalTestRam(memAInit))
+  val memB = Module(new ExternalTestRam(memBInit))
 
   rom.io.romAddress := core.io.romAddr
   core.io.romData := rom.io.romData
   io.regOut := core.io.regOut
   io.finishFlag := core.io.finish
 
-  memA.io.address := core.io.memA.address
   memA.io.in := core.io.memA.in
-  memA.io.writeEnable := core.io.memA.writeEnable
   core.io.memA.out := memA.io.out
 
-  memB.io.address := core.io.memB.address
   memB.io.in := core.io.memB.in
-  memB.io.writeEnable := core.io.memB.writeEnable
   core.io.memB.out := memB.io.out
+
+  core.io.load := io.load
 }

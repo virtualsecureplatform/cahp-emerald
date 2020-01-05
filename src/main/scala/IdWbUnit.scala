@@ -18,38 +18,38 @@ import chisel3._
 import chisel3.util.{Cat, Fill}
 
 class IdUnitIn(implicit val conf:CAHPConfig) extends Bundle {
-  val instA = Input(UInt(24.W))
-  val instB = Input(UInt(24.W))
-  val pc = Input(UInt(9.W))
+  val instA = UInt(24.W)
+  val instB = UInt(24.W)
+  val pc = UInt(9.W)
 }
 
 class MainRegisterWritePortIn(implicit val conf:CAHPConfig) extends Bundle {
-  val regWrite = Input(UInt(4.W))
-  val regWriteData = Input(UInt(16.W))
-  val regWriteEnable = Input(Bool())
+  val regWrite = UInt(4.W)
+  val regWriteData = UInt(16.W)
+  val regWriteEnable = Bool()
 }
 
 class WbUnitIn(implicit val conf:CAHPConfig) extends Bundle {
   val instARegWrite = new MainRegisterWritePortIn()
   val instBRegWrite = new MainRegisterWritePortIn()
 
-  val finishFlag = Input(Bool())
-  val pc = Input(UInt(9.W))
+  val finishFlag = Bool()
+  val pc = UInt(9.W)
 }
 
 class IdWbUnitPort (implicit val conf:CAHPConfig) extends Bundle {
-  val idIn = new IdUnitIn
-  val wbIn = new WbUnitIn
-  val exMemIn = new MemUnitIn
-  val exWbIn = new WbUnitIn
-  val memWbIn = new WbUnitIn
+  val idIn = Input(new IdUnitIn)
+  val wbIn = Input(new WbUnitIn)
+  val exMemIn = Input(new MemUnitIn)
+  val exWbIn = Input(new WbUnitIn)
+  val memWbIn = Input(new WbUnitIn)
   val idEnable = Input(Bool())
   val wbEnable = Input(Bool())
   val flush = Input(Bool())
 
-  val exOut = Flipped(new ExUnitIn)
-  val memOut = Flipped(new MemUnitIn)
-  val wbOut = Flipped(new WbUnitIn)
+  val exOut = Output(new ExUnitIn)
+  val memOut = Output(new MemUnitIn)
+  val wbOut = Output(new WbUnitIn)
   val stole = Output(Bool())
 
   val finishFlag = Output(Bool())
@@ -68,10 +68,10 @@ class ForwardController(implicit val conf:CAHPConfig) extends Module{
   val io = IO(new Bundle{
     val rs = Input(UInt(4.W))
     val rsData = Input(UInt(16.W))
-    val instAEx = new MainRegisterWritePortIn()
-    val instBEx = new MainRegisterWritePortIn()
-    val instAMem = new MainRegisterWritePortIn()
-    val instBMem = new MainRegisterWritePortIn()
+    val instAEx = Input(new MainRegisterWritePortIn())
+    val instBEx = Input(new MainRegisterWritePortIn())
+    val instAMem = Input(new MainRegisterWritePortIn())
+    val instBMem = Input(new MainRegisterWritePortIn())
     val rsDataOut = Output(UInt(16.W))
   })
   when(io.rs === io.instAEx.regWrite && io.instAEx.regWriteEnable) {
@@ -286,7 +286,8 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
   io.wbOut.pc := io.idIn.pc
   when(conf.debugId.B){
     printf("[ID] PC Address:0x%x\n", pIdReg.pc)
-    //printf("[ID] Instruction:0x%x\n", pIdRe
+    printf("[ID] InstA:0x%x\n", pIdReg.instA)
+    printf("[ID] InstB:0x%x\n", pIdReg.instB)
     //printf("[ID] Imm:0x%x\n", decoder.io.imm)
     //printf("[ID] RegWrite:0x%x\n", decoder.io.wbOut.regWrite)
   }

@@ -82,7 +82,6 @@ class DecoderUnitSpec extends ChiselFlatSpec {
     Driver.execute(Array(""), () => new InstructionDecoder) {
       c =>
         new PeekPokeTester(c) {
-          poke(c.io.pc, 0)
           inst.foreach { item =>
             printf("Testing: %s\n", item._1)
             poke(c.io.inst, item._2._1)

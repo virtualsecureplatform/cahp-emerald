@@ -18,15 +18,15 @@ import chisel3._
 import chisel3.util.{BitPat, Cat}
 
 class ExUnitPort(implicit val conf:CAHPConfig) extends Bundle {
-  val in = new ExUnitIn
-  val memIn = new MemUnitIn
-  val wbIn = new WbUnitIn
+  val in = Input(new ExUnitIn)
+  val memIn = Input(new MemUnitIn)
+  val wbIn = Input(new WbUnitIn)
   val enable = Input(Bool())
   val flush = Input(Bool())
 
   val out = new ExUnitOut
-  val memOut = Flipped(new MemUnitIn)
-  val wbOut = Flipped(new WbUnitIn)
+  val memOut = Output(new MemUnitIn)
+  val wbOut = Output(new WbUnitIn)
 }
 
 class ExUnitIn(implicit val conf:CAHPConfig) extends Bundle {
@@ -34,17 +34,17 @@ class ExUnitIn(implicit val conf:CAHPConfig) extends Bundle {
   val instBALU = new ALUPortIn
 
   // instA => false, instB => true
-  val selJump = Input(Bool())
-  val selMem = Input(Bool())
+  val selJump = Bool()
+  val selMem = Bool()
 
   val bcIn = new BranchControllerIn()
 }
 
 class BranchControllerIn(implicit val conf:CAHPConfig) extends Bundle {
-  val pcOpcode = Input(UInt(3.W))
-  val pc = Input(UInt(16.W))
-  val pcImm = Input(UInt(16.W))
-  val pcAdd = Input(Bool())
+  val pcOpcode = UInt(3.W)
+  val pc = UInt(16.W)
+  val pcImm = UInt(16.W)
+  val pcAdd = Bool()
 }
 
 class ExUnitOut(implicit val conf:CAHPConfig) extends Bundle {

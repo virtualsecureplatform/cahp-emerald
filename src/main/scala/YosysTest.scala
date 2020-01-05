@@ -33,8 +33,8 @@ class YosysTest(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt]) extends Modu
   conf.test = true
   val io = IO(new YosysTestPort)
   val coreUnit = Module(new CoreUnit)
-  val memA = Module(new ExternalTestRam(memAInit))
-  val memB = Module(new ExternalTestRam(memBInit))
+  val memA = Module(new ExternalRam(false, ""))
+  val memB = Module(new ExternalRam(false, ""))
   //io.testRegx8 := coreUnit.io.testRegx8
   //io.testRegWrite := coreUnit.io.testRegWrite
   //io.testRegWriteEnable := coreUnit.io.testRegWriteEnable
@@ -44,13 +44,9 @@ class YosysTest(val memAInit:Seq[BigInt], val memBInit:Seq[BigInt]) extends Modu
   coreUnit.io.romData := io.romData
   io.romDataOut := io.romData
 
-  memA.io.address := coreUnit.io.memA.address
   memA.io.in := coreUnit.io.memA.in
-  memA.io.writeEnable := coreUnit.io.memA.writeEnable
   coreUnit.io.memA.out := memA.io.out
-  memB.io.address := coreUnit.io.memB.address
   memB.io.in := coreUnit.io.memB.in
-  memB.io.writeEnable := coreUnit.io.memB.writeEnable
   coreUnit.io.memB.out := memB.io.out
 }
 
@@ -96,13 +92,11 @@ class YosysTest3(implicit val conf: CAHPConfig) extends Module {
   io.out := io.in1 + io.in2
 }
 class TestRam(implicit val conf:CAHPConfig) extends Module{
-  val io = IO(new MemPort(conf))
+  val io = IO(new MemPort())
   val mem = Mem(4, UInt(2.W))
-  val pReg = RegInit(0.U.asTypeOf(new MemPort(conf)))
+  val pReg = RegInit(0.U.asTypeOf(new MemPortIn()))
 
-  pReg.address := io.address
   pReg.in := io.in
-  pReg.writeEnable := io.writeEnable
   when(pReg.writeEnable){
     mem(pReg.address) := pReg.in
   }

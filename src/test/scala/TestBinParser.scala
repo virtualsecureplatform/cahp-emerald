@@ -1,7 +1,14 @@
+import java.io.PrintWriter
+import java.nio.file.{Files, Paths}
+
 import scala.io.Source
+import java.util.UUID
+
 
 class TestBinParser(filePath: String) {
   val source = Source.fromFile(filePath)
+  val memAhex = "/tmp/"+UUID.randomUUID().toString+".hex.txt"
+  val memBhex = "/tmp/"+UUID.randomUUID().toString+".hex.txt"
   val lines = source.getLines
 
   val memSize = 256
@@ -32,6 +39,15 @@ class TestBinParser(filePath: String) {
       memBSeq = memBSeq:+BigInt(0)
     }
   }
+
+  val memApw = new PrintWriter(memAhex)
+  val memBpw = new PrintWriter(memBhex)
+  for(i <- 0 to memSize-1){
+    memApw.println(memASeq(i).toString(16))
+    memBpw.println(memBSeq(i).toString(16))
+  }
+  memApw.close
+  memBpw.close
 
   def asUnsigned(unsignedLong: Long) =
     (BigInt(unsignedLong >>> 1) << 1) + (unsignedLong & 1)

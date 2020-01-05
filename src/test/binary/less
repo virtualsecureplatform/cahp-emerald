@@ -1,0 +1,113 @@
+
+0003-bf.o:	file format ELF32-cahp
+
+
+Disassembly of section .text:
+
+00000000 _start:
+       0: 75 01 fe                     	li	sp, 510
+       3: be 00                        	jsal	5
+       5: 0e 00                        	js	0
+       7: 00 c2                        	<unknown>
+
+00000008 main:
+       8: c2 21                        	addi2	sp, -14
+       a: 1c 63                        	swsp	s0, 12(sp)
+       c: 1c 54                        	swsp	s1, 10(sp)
+       e: 1c 45                        	swsp	s2, 8(sp)
+      10: 1c 36                        	swsp	s3, 6(sp)
+      12: 1c 27                        	swsp	s4, 4(sp)
+      14: 35 08 32                     	li	a0, 50
+      17: 34 09                        	lsi	a1, 0
+      19: 74 6a                        	lsi	a2, 22
+      1b: 04 0b                        	lui	a3, 0
+      1d: 03 bb 02                     	addi	a3, a3, 2
+      20: 35 0c 5d                     	li	a4, 93
+      23: 04 0d                        	lui	a5, 0
+      25: 03 dd 1a                     	addi	a5, a5, 26
+      28: 1c 1d                        	swsp	a5, 2(sp)
+      2a: 74 2e                        	lsi	t0, 18
+      2c: f4 fd                        	lsi	a5, -1
+      2e: 1c 0d                        	swsp	a5, 0(sp)
+      30: 34 43                        	lsi	s0, 4
+      32: 35 04 2d                     	li	s1, 45
+      35: 35 05 3c                     	li	s2, 60
+      38: c0 96                        	mov	s3, a1
+      3a: 2b 87 01                     	lsli	s4, a0, 1
+      3d: 0f 6a a6                     	beq	s3, a2, 166
+      40: 01 6f 0b                     	add	t1, s3, a3
+      43: 25 ff 00                     	lb	t1, 0(t1)
+      46: 0f fc 26                     	beq	t1, a4, 38
+      49: 0f f4 52                     	beq	t1, s1, 82
+      4c: 0f f5 5d                     	beq	t1, s2, 93
+      4f: 35 0d 3e                     	li	a5, 62
+      52: 0f fd 5b                     	beq	t1, a5, 91
+      55: 35 0d 5b                     	li	a5, 91
+      58: 0f fd 5b                     	beq	t1, a5, 91
+      5b: 35 0d 2b                     	li	a5, 43
+      5e: 2f fd 51                     	bne	t1, a5, 81
+      61: 14 1d                        	lwsp	a5, 2(sp)
+      63: 80 7d                        	add2	a5, s4
+      65: 15 df 00                     	lw	t1, 0(a5)
+      68: 02 1f                        	addi2	t1, 1
+      6a: 4e 07                        	js	58
+      6c: 2f 6e 43                     	bne	s3, t0, 67
+      6f: 14 1d                        	lwsp	a5, 2(sp)
+      71: 80 7d                        	add2	a5, s4
+      73: 15 dd 00                     	lw	a5, 0(a5)
+      76: 0f d9 39                     	beq	a5, a1, 57
+      79: c0 e6                        	mov	s3, t0
+      7b: c0 97                        	mov	s4, a1
+      7d: 37 69 1a                     	blt	s3, a1, 26
+      80: 0f 6e 0d                     	beq	s3, t0, 13
+      83: 2f 63 05                     	bne	s3, s0, 5
+      86: c2 f7                        	addi2	s4, -1
+      88: 2f 79 0a                     	bne	s4, a1, 10
+      8b: 8e 04                        	js	36
+      8d: 02 17                        	addi2	s4, 1
+      8f: 0f 79 20                     	beq	s4, a1, 32
+      92: c2 f6                        	addi2	s3, -1
+      94: ff 96 ec                     	ble	a1, s3, -20
+      97: 14 06                        	lwsp	s3, 0(sp)
+      99: ce 02                        	js	22
+      9b: 14 1d                        	lwsp	a5, 2(sp)
+      9d: 80 7d                        	add2	a5, s4
+      9f: 15 df 00                     	lw	t1, 0(a5)
+      a2: c2 ff                        	addi2	t1, -1
+      a4: 1d df 00                     	sw	t1, 0(a5)
+      a7: 0e 01                        	js	8
+      a9: c2 f8                        	addi2	a0, -1
+      ab: 8e 00                        	js	4
+      ad: 02 18                        	addi2	a0, 1
+      af: 02 16                        	addi2	s3, 1
+      b1: 2e f1                        	js	-119
+      b3: ef 63 fc                     	bne	s3, s0, -4
+      b6: 14 1d                        	lwsp	a5, 2(sp)
+      b8: 80 7d                        	add2	a5, s4
+      ba: 15 dd 00                     	lw	a5, 0(a5)
+      bd: 34 07                        	lsi	s4, 0
+      bf: ef d7 f0                     	bne	a5, s4, -16
+      c2: c0 36                        	mov	s3, s0
+      c4: 0f 63 0d                     	beq	s3, s0, 13
+      c7: 74 2d                        	lsi	a5, 18
+      c9: 0f 6d 0c                     	beq	s3, a5, 12
+      cc: 2f 6a 0b                     	bne	s3, a2, 11
+      cf: 0e fc                        	js	-32
+      d1: 02 17                        	addi2	s4, 1
+      d3: 8e 00                        	js	4
+      d5: c2 f7                        	addi2	s4, -1
+      d7: 34 0d                        	lsi	a5, 0
+      d9: cf 7d d6                     	beq	s4, a5, -42
+      dc: 02 16                        	addi2	s3, 1
+      de: ef 63 e9                     	bne	s3, s0, -23
+      e1: 0e fe                        	js	-16
+      e3: 14 18                        	lwsp	a0, 2(sp)
+      e5: 80 78                        	add2	a0, s4
+      e7: 15 88 00                     	lw	a0, 0(a0)
+      ea: 14 27                        	lwsp	s4, 4(sp)
+      ec: 14 36                        	lwsp	s3, 6(sp)
+      ee: 14 45                        	lwsp	s2, 8(sp)
+      f0: 14 54                        	lwsp	s1, 10(sp)
+      f2: 14 63                        	lwsp	s0, 12(sp)
+      f4: 02 e1                        	addi2	sp, 14
+      f6: 06 00                        	jr	ra

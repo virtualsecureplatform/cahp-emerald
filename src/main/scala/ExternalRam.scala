@@ -14,15 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import chisel3._
+import chisel3.util.experimental.loadMemoryFromFile
+import firrtl.annotations.MemoryLoadFileType
 
-class ExternalRam(implicit val conf:CAHPConfig) extends Module{
-  val io = IO(new MemPort(conf))
+class ExternalRam(val load:Boolean, val fileName:String)(implicit val conf:CAHPConfig) extends Module{
+  val io = IO(new MemPort)
   val mem = Mem(256, UInt(8.W))
-  val pReg = RegInit(0.U.asTypeOf(new MemPort(conf)))
+  loadMemoryFromFile(mem, fileName)
+  val pReg = RegInit(0.U.asTypeOf(new MemPortIn()))
 
-  pReg.address := io.address
-  pReg.in := io.in
-  pReg.writeEnable := io.writeEnable
+  pReg := io.in
 
   when(pReg.writeEnable) {
     mem(pReg.address) := pReg.in

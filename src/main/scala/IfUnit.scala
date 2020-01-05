@@ -59,13 +59,15 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
 
 
   val stole = Wire(Bool())
+  stole := false.B
   val romData = Wire(UInt(64.W))
   val instBLoadable = Wire(Bool())
   val instBAddr = Wire(UInt(conf.romAddrWidth.W))
   val instBOut = Wire(UInt(24.W))
   instBOut := DontCare
   val isLong = Wire(Bool())
-  val isInstBLong = instBOut(0) === 1.U
+  val isInstBLong = Wire(Bool())
+  isInstBLong := instBOut(0) === 1.U
   isLong := false.B
 
   // **** Register Declaration ****
@@ -76,7 +78,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   // **** I/O Connection ****
   pc.io.jumpAddress := io.in.jumpAddress
   pc.io.jump := io.in.jump
-  pc.io.enable := io.enable
+  pc.io.enable := io.enable&(!io.idStole)
   pc.io.stole := stole
 
   when(depSolver.io.execB){
@@ -151,7 +153,6 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   io.out.romData := romData
 
   instBLoadable := false.B
-  stole := io.idStole
 
   when(isLong){
     when(depSolver.io.execB&instBLoadable) {
@@ -177,32 +178,37 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
 
 
   instBAddr := DontCare
-  when(io.enable) {
+  when(io.enable&(!io.idStole)) {
     when(io.in.jump) {
       io.out.romAddress := io.in.jumpAddress(conf.romAddrWidth - 2, 3)
       romCache := romData
       isLong := getInstOpByte(io.in.jumpAddress, romData)(0) === 1.U
       when(isLong) {
+        instBAddr := io.in.jumpAddress + 3.U
+        val isInstBLong = getInstOpByte(instBAddr, romData)(0) === 1.U
         when(io.in.jumpAddress(2, 0) === 5.U) {
           romCacheState := romCacheStateType.NotLoaded
           stole := false.B
         }.elsewhen(io.in.jumpAddress(2, 1) === 3.U) {
           romCacheState := romCacheStateType.Loaded
           stole := true.B
+        }.elsewhen((instBAddr(2, 0) === 5.U)&(isInstBLong)){
+          romCacheState := romCacheStateType.NotLoaded
+        }.elsewhen((instBAddr(2, 0) === 6.U)&(!isInstBLong)){
+          romCacheState := romCacheStateType.NotLoaded
         }.otherwise {
           romCacheState := romCacheStateType.Loaded
           stole := false.B
         }
-        instBAddr := io.in.jumpAddress + 3.U
         when(instBAddr(2, 0) === 3.U || instBAddr(2, 0) === 4.U || instBAddr(2, 0) === 5.U){
           instBLoadable := true.B
         }.elsewhen(instBAddr(2, 0) === 6.U){
-          val isInstBLong = getInstOpByte(instBAddr, romData)(0) === 1.U
           instBLoadable := !isInstBLong
         }.otherwise{
           instBLoadable := false.B
         }
       }.otherwise {
+        instBAddr := io.in.jumpAddress + 2.U
         when(io.in.jumpAddress(2, 0) === 6.U) {
           romCacheState := romCacheStateType.NotLoaded
           stole := false.B
@@ -213,7 +219,6 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
           romCacheState := romCacheStateType.Loaded
           stole := false.B
         }
-        instBAddr := io.in.jumpAddress + 2.U
         when(instBAddr(2, 0) === 2.U || instBAddr(2, 0) === 3.U || instBAddr(2, 0) === 4.U || instBAddr(2, 0) === 5.U){
           instBLoadable := true.B
         }.elsewhen(instBAddr(2, 0) === 6.U){
@@ -288,7 +293,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
           instBOut := 0.U
         }.otherwise{
           io.out.instOut := getInst(pc.io.pcOut, romData, romData)
-          io.out.instAOut := getInst(io.in.jumpAddress, romData, romData)
+          io.out.instAOut := getInst(pc.io.pcOut, romData, romData)
           when(instBLoadable){
             instBOut := getInst(instBAddr, romData, romData)
           }.otherwise{
@@ -305,23 +310,18 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
         when(isLong) {
           instBAddr := pc.io.pcOut + 3.U
           when(pc.io.pcOut(2, 0) === 5.U || pc.io.pcOut(2, 0) === 6.U || pc.io.pcOut(2, 0) === 7.U) {
-            romCache := romData
             instBLoadFromCache := false.B
-          }.elsewhen(pc.io.pcOut(2, 0) === 4.U){
-            romCache := romCache
-          }.otherwise {
-            romCache := romCache
           }
         }.otherwise {
           instBAddr := pc.io.pcOut + 2.U
           when(pc.io.pcOut(2, 0) === 6.U || pc.io.pcOut(2, 0) === 7.U) {
-            romCache := romData
             instBLoadFromCache := false.B
-          }.elsewhen(pc.io.pcOut(2, 0) === 5.U){
-            romCache := romData
-          }.otherwise {
-            romCache := romCache
           }
+        }
+        when((pc.io.pcOut(2,0)+&pc.io.pcDiff(2,0))(3) === 1.U){
+          romCache := romData
+        }.otherwise{
+          romCache := romCache
         }
         io.out.instOut := getInst(pc.io.pcOut, romData, romCache)
         io.out.instAOut := getInst(pc.io.pcOut, romData, romCache)

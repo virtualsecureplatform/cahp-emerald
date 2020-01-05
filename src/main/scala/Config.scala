@@ -7,6 +7,8 @@ case class CAHPConfig() {
 
   var test = false
   var load = false
+  var memAHex = ""
+  var memBHex = ""
   var testRom:Seq[BigInt] = Seq(BigInt(0))
 
   //IF Unit

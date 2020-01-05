@@ -2,7 +2,6 @@ import chisel3.{util, _}
 
 class InstructionDecoderPort(implicit val conf:CAHPConfig) extends Bundle {
   val inst = Input(UInt(24.W))
-  val pc = Input(UInt(9.W))
 
   val imm = Output(UInt(16.W))
   val pcImm = Output(UInt(16.W))
@@ -17,10 +16,10 @@ class InstructionDecoderPort(implicit val conf:CAHPConfig) extends Bundle {
   val isMem = Output(Bool())
   val isFinish = Output(Bool())
 
-  val exALUOut = Flipped(new ALUPortIn)
-  val exBCOut = Flipped(new BranchControllerIn())
-  val memOut = Flipped(new MemUnitIn)
-  val wbOut = Flipped(new MainRegisterWritePortIn())
+  val exALUOut = Output(new ALUPortIn)
+  val exBCOut = Output(new BranchControllerIn())
+  val memOut = Output(new MemUnitIn)
+  val wbOut = Output(new MainRegisterWritePortIn())
 
   val testImmType = if(conf.test) Output(UInt(4.W)) else Output(UInt(0.W))
   val testPCImmType = if(conf.test) Output(UInt(2.W)) else Output(UInt(0.W))
