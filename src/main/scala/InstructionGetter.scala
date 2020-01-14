@@ -58,5 +58,6 @@ class InstructionGetter(implicit val conf:CAHPConfig) extends Module {
     io.out.isLoadFromUpper := true.B
   }
 
+  io.out.inst := inst
   io.out.isLong := inst(0)
 }

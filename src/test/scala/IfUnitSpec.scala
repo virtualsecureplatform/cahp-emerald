@@ -37,12 +37,10 @@ class IfUnitSpec extends ChiselFlatSpec {
           poke(c.io.in.jumpAddress, 0)
           poke(c.io.in.jump, false)
           poke(c.io.enable, true)
-          expect(c.io.testRomCacheState, romCacheStateType.NotLoaded)
           expect(c.io.out.instAOut, TestUtils.genADD(0, 1, 2))
           expect(c.io.out.instBOut, TestUtils.genADD(1, 2, 3))
           expect(c.io.out.romAddress, 0)
           expect(c.io.out.pcAddress, 3)
-          expect(c.io.out.stole, false)
 
           step(1)
           val rom2 = ((TestUtils.genADD(2, 3, 4) >> 16) & 0xFF) |
@@ -50,10 +48,8 @@ class IfUnitSpec extends ChiselFlatSpec {
             (TestUtils.genADD(4, 5, 6) << 24) |
             (TestUtils.genADD2(4, 5) << 48)
           poke(c.io.in.romData, rom2)
-          expect(c.io.testRomCache, rom)
           expect(c.io.out.pcAddress, 9.U)
           expect(c.io.out.romAddress, 1.U)
-          expect(c.io.testRomCacheState, romCacheStateType.Loaded)
           expect(c.io.out.instAOut, TestUtils.genADD(2, 3, 4))
           var instB = peek(c.io.out.instBOut) & 0xFFFF
           assert(instB == TestUtils.genADD2(3, 4))
@@ -63,15 +59,12 @@ class IfUnitSpec extends ChiselFlatSpec {
             (TestUtils.genADD(6, 7, 0) << 24) |
             (TestUtils.genADD2(7, 0) << 48)
           poke(c.io.in.romData, rom3)
-          expect(c.io.testRomCache, rom2)
           expect(c.io.out.pcAddress, 11.U)
           expect(c.io.out.romAddress, 2.U)
           expect(c.io.out.instAOut, TestUtils.genADD(4, 5, 6))
 
           step(1)
-          expect(c.io.testRomCacheState, romCacheStateType.Loaded)
           expect(c.io.out.pcAddress, 16.U)
-          expect(c.io.testRomCache, rom2)
           var instA = peek(c.io.out.instAOut) & 0xFFFF
           assert(instA == TestUtils.genADD2(4, 5))
           expect(c.io.out.instBOut, TestUtils.genADD(5, 6, 7))
