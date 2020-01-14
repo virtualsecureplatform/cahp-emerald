@@ -28,6 +28,8 @@ class IfUnitOut(implicit val conf: CAHPConfig) extends Bundle {
 
   val instAOut = Output(UInt(24.W))
   val instBOut = Output(UInt(24.W))
+
+  val stoleInst = Output(Bool())
 }
 
 class IfUnitPort(implicit val conf: CAHPConfig) extends Bundle {
@@ -49,7 +51,7 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   // **** I/O Connection ****
   pc.io.jumpAddress := io.in.jumpAddress
   pc.io.jump := io.in.jump
-  pc.io.enable := io.enable&(!io.idStole)
+  pc.io.enable := io.enable
   pc.io.stole := false.B
   pc.io.pcDiff := instFetcher.io.out.pcDiff
 
@@ -63,7 +65,13 @@ class IfUnit(implicit val conf: CAHPConfig) extends Module {
   io.out.instBOut := instFetcher.io.out.instB
   io.out.romAddress := instFetcher.io.out.romAddr
   io.out.pcAddress := instFetcher.io.out.pcAddr
+  io.out.stoleInst := io.idStole
 
+  //printf("pcAddr:%x state:%x instA:%x instB:%x romData:%x romAddr:%x idStole:%d jumpAddr:%x jump:%d\n",
+  //  io.out.pcAddress, instFetcher.io.state,
+  //  instFetcher.io.out.instA, instFetcher.io.out.instB,
+  //  io.in.romData, io.out.romAddress, io.idStole,
+  //  io.in.jumpAddress, io.in.jump)
   when(conf.debugIf.B){
     printf("\n[IF]PC Address:0x%x\n", io.out.pcAddress)
     printf("[IF] jump:%d\n", io.in.jump)

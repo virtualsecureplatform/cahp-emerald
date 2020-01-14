@@ -21,6 +21,8 @@ class IdUnitIn(implicit val conf:CAHPConfig) extends Bundle {
   val instA = UInt(24.W)
   val instB = UInt(24.W)
   val pc = UInt(9.W)
+
+  val stoleInst = Bool()
 }
 
 class MainRegisterWritePortIn(implicit val conf:CAHPConfig) extends Bundle {
@@ -113,6 +115,7 @@ class IdWbUnit(implicit val conf: CAHPConfig) extends Module {
     pIdReg := io.idIn
     pIdReg.instA := 0.U(16.W)
     pIdReg.instB := 0.U(16.W)
+    printf("flush\n")
   }.elsewhen(io.idEnable&&(!stole)){
     pIdReg := io.idIn
   }

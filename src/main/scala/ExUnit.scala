@@ -73,6 +73,12 @@ class ExUnit(implicit val conf:CAHPConfig) extends Module {
       pWbReg.instARegWrite.regWriteEnable := false.B
       pWbReg.instBRegWrite.regWriteEnable := false.B
       pExReg.bcIn.pcOpcode := 0.U
+      //when(io.wbIn.instARegWrite.regWriteEnable){
+      //  printf("Disable regWrite x%d\n", io.wbIn.instARegWrite.regWrite)
+      //}
+      //when(io.wbIn.instBRegWrite.regWriteEnable){
+      //  printf("Disable regWrite x%d\n", io.wbIn.instBRegWrite.regWrite)
+      //}
     }
   }
 

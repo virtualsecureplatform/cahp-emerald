@@ -43,7 +43,7 @@ class InstructionFetcher(implicit val conf:CAHPConfig) extends Module {
   val romCache = Reg(UInt(64.W))
   val romCacheState = RegInit(romCacheStateType.NotLoaded)
 
-  val romAddr = Wire(UInt((conf.romAddrWidth-3).W))
+  val romAddr = Wire(UInt((conf.romAddrWidth - 3).W))
 
   val instAAddr = Wire(UInt(conf.romAddrWidth.W))
   val instBAddr = Wire(UInt(conf.romAddrWidth.W))
@@ -67,52 +67,59 @@ class InstructionFetcher(implicit val conf:CAHPConfig) extends Module {
   depSolver.io.instAValid := instAValid
   depSolver.io.instBValid := instBValid
 
-  when(io.in.jump){
+  when(io.in.jump) {
     instAAddr := io.in.jumpAddress
-  }.otherwise{
+  }.otherwise {
     instAAddr := io.in.pcAddress
   }
 
-  when(instAGetter.io.out.isLong){
+  when(instAGetter.io.out.isLong) {
     instBAddr := instAAddr + 3.U
-  }.otherwise{
+  }.otherwise {
     instBAddr := instAAddr + 2.U
   }
 
-  when(depSolver.io.instAExec){
+  when(depSolver.io.instAExec) {
     when(depSolver.io.instBExec) {
-      when(instAGetter.io.out.isLong){
-        when(instBGetter.io.out.isLong){
+      when(instAGetter.io.out.isLong) {
+        when(instBGetter.io.out.isLong) {
           pcDiff := 6.U
-        }.otherwise{
+        }.otherwise {
           pcDiff := 5.U
         }
-      }.otherwise{
-        when(instBGetter.io.out.isLong){
+      }.otherwise {
+        when(instBGetter.io.out.isLong) {
           pcDiff := 5.U
-        }.otherwise{
+        }.otherwise {
           pcDiff := 4.U
         }
       }
       io.out.pcAddr := instBAddr
-    }.otherwise{
-      when(instAGetter.io.out.isLong){
+    }.otherwise {
+      when(instAGetter.io.out.isLong) {
         pcDiff := 3.U
-      }.otherwise{
+      }.otherwise {
         pcDiff := 2.U
       }
       io.out.pcAddr := instAAddr
     }
-  }.otherwise{
+  }.otherwise {
     pcDiff := 0.U
     io.out.pcAddr := instAAddr
   }
   io.out.pcDiff := pcDiff
 
-  when(io.in.jump || (romCacheState === romCacheStateType.NotLoaded)){
-    romAddr := instAAddr(conf.romAddrWidth-2, 3)
-    when(instAGetter.io.out.isLoadFromUpper){
+  when(!io.enable){
+    instAValid := false.B
+    instBValid := false.B
+    romAddr := instAAddr(conf.romAddrWidth-1, 3)
+  }.elsewhen(io.in.jump || (romCacheState === romCacheStateType.NotLoaded)){
+    romAddr := instAAddr(conf.romAddrWidth-1, 3)
+    when(instAGetter.io.out.isLoadFromUpper) {
       instAValid := false.B
+      instBValid := false.B
+    }.elsewhen(instAGetter.io.out.isLoadFromLowerLast){
+      instAValid := true.B
       instBValid := false.B
     }.elsewhen(instBGetter.io.out.isLoadFromUpper){
       instAValid := true.B
@@ -122,7 +129,7 @@ class InstructionFetcher(implicit val conf:CAHPConfig) extends Module {
       instBValid := true.B
     }
   }.otherwise{
-    romAddr := instAAddr(conf.romAddrWidth-2, 3) + 1.U
+    romAddr := instAAddr(conf.romAddrWidth-1, 3) + 1.U
     instAValid := true.B
     instBValid := true.B
     instAGetter.io.in.lowerBlock := romCache
@@ -135,7 +142,6 @@ class InstructionFetcher(implicit val conf:CAHPConfig) extends Module {
   }
   io.out.romAddr := romAddr
 
-  when(io.enable) {
     when(io.in.jump || (romCacheState === romCacheStateType.NotLoaded)) {
       romCache := io.in.romData
       when(instBGetter.io.out.isLoadFromLowerLast & depSolver.io.instAExec & depSolver.io.instBExec) {
@@ -154,10 +160,6 @@ class InstructionFetcher(implicit val conf:CAHPConfig) extends Module {
 
       romCacheState := romCacheStateType.Loaded
     }
-  }.otherwise{
-    romCacheState := romCacheState
-    romCache := romCache
-  }
 
   when(depSolver.io.instAExec){
     io.out.instA := instAGetter.io.out.inst

@@ -11,7 +11,7 @@ OBJ_FILE="${OBJ_FILE}.o"
 BIN_FILE=${SOURCE_FILE%.*}
 BIN_FILE="${BIN_FILE}.bin"
 
-$LLVM_CC -Oz -target cahp $SOURCE_FILE -o $OBJ_FILE --sysroot=$CAHP_RUNTIME -nostdlib
+$LLVM_CC -Oz -target cahp $SOURCE_FILE -o $OBJ_FILE --sysroot=$CAHP_RUNTIME
 echo $BIN_FILE
 
 $CONVERTER $OBJ_FILE > $BIN_FILE
