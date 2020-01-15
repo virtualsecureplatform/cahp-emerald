@@ -124,10 +124,9 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
     res
   }
 
-  val addr = Wire(UInt(8.W))
-  val data_upper = io.in.in(15, 8)
-  val data_lower = io.in.in(7, 0)
-  addr := io.in.address(8,1)
+  val addr = pMemReg.address(8,1)
+  val data_upper = pMemReg.in(15, 8)
+  val data_lower = pMemReg.in(7, 0)
 
   io.memA.in.address := addr
   io.memB.in.address := addr
@@ -138,9 +137,9 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
   io.memA.in.load := DontCare
   io.memB.in.load := DontCare
 
-  when(io.in.byteEnable){
-    when(io.in.memWrite){
-      when(io.in.address(0) === 1.U) {
+  when(pMemReg.byteEnable){
+    when(pMemReg.memWrite){
+      when(pMemReg.address(0) === 1.U) {
         io.memA.in.writeEnable := true.B&io.enable
         io.memA.in.in := data_lower
       }.otherwise {
@@ -149,33 +148,28 @@ class MemUnit(implicit val conf:CAHPConfig) extends Module {
       }
     }
   }.otherwise {
-    when(io.in.memWrite) {
+    when(pMemReg.memWrite) {
       io.memA.in.writeEnable := true.B&io.enable
       io.memB.in.writeEnable := true.B&io.enable
     }
   }
 
-  io.out.out := DontCare
-  when(pMemReg.instAMemRead|pMemReg.instBMemRead){
-    when(pMemReg.byteEnable){
-      when(pMemReg.address(0) === 1.U){
-        when(pMemReg.signExt){
-          io.out.out := sign_ext_8bit(io.memA.out)
-        }.otherwise{
-          io.out.out := Cat(0.U(8.W), io.memA.out)
-        }
+  when(pMemReg.byteEnable){
+    when(pMemReg.address(0) === 1.U){
+      when(pMemReg.signExt){
+        io.out.out := sign_ext_8bit(io.memA.out)
       }.otherwise{
-        when(pMemReg.signExt){
-          io.out.out := sign_ext_8bit(io.memB.out)
-        }.otherwise{
-          io.out.out := Cat(0.U(8.W), io.memB.out)
-        }
+        io.out.out := Cat(0.U(8.W), io.memA.out)
       }
     }.otherwise{
-      io.out.out := Cat(io.memA.out, io.memB.out)
+      when(pMemReg.signExt){
+        io.out.out := sign_ext_8bit(io.memB.out)
+      }.otherwise{
+        io.out.out := Cat(0.U(8.W), io.memB.out)
+      }
     }
   }.otherwise{
-    io.out.out := pMemReg.address
+    io.out.out := Cat(io.memA.out, io.memB.out)
   }
 
   when(conf.debugMem.B){

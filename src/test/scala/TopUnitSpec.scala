@@ -26,42 +26,39 @@ class TopUnitSpec() extends ChiselFlatSpec {
   conf.debugId = false
   conf.debugEx = false
   conf.debugMem = false
-  conf.debugWb = true
+  conf.debugWb = false
   conf.test = true
   conf.load = true
 
 
   val testDir = new File("src/test/binary/")
   testDir.listFiles().foreach { f =>
-    if (f.getName().contains("0009-gameoflife.bin")) {
+    if (f.getName().contains(".bin")) {
       println(f.getName())
       val parser = new TestBinParser(f.getAbsolutePath())
       conf.testRom = parser.romSeq
       println(parser.romSeq)
-      behavior of "TopUnit Test"
-      it should "it works well" in {
-        Driver.execute(Array("--backend-name=treadle"), () => new TopUnit(parser.memASeq, parser.memBSeq)) {
-          c =>
-            new PeekPokeTester(c) {
-              poke(c.io.load, true)
-              for (i <- 0 until 255){
+      assert(Driver(() => new TopUnit(parser.memASeq, parser.memBSeq)) {
+        c =>
+          new PeekPokeTester(c) {
+            poke(c.io.load, true)
+            for (i <- 0 until 255){
+              step(1)
+            }
+            poke(c.io.load, false)
+            val b = new Breaks
+            b.breakable {
+              for (i <- 0 until parser.cycle) {
                 step(1)
-              }
-              poke(c.io.load, false)
-              val b = new Breaks
-              b.breakable {
-                for (i <- 0 until parser.cycle) {
-                  step(1)
-                  if (peek(c.io.finishFlag) == 1) {
-                    printf("CYCLE:%d\n", i)
-                    b.break
-                  }
+                if (peek(c.io.finishFlag) == 1) {
+                  printf("CYCLE:%d\n", i)
+                  b.break
                 }
               }
-              expect(c.io.regOut.x8, parser.res)
             }
-        } should be(true)
-      }
+            expect(c.io.regOut.x8, parser.res)
+          }
+      })
     }
   }
 }

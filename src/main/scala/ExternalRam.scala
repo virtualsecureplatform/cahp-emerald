@@ -20,18 +20,12 @@ import firrtl.annotations.MemoryLoadFileType
 class ExternalRam(val load:Boolean, val fileName:String)(implicit val conf:CAHPConfig) extends Module{
   val io = IO(new MemPort)
   val mem = Mem(256, UInt(8.W))
-  loadMemoryFromFile(mem, fileName)
-  val pReg = RegInit(0.U.asTypeOf(new MemPortIn()))
 
-  pReg := io.in
-
-  when(pReg.writeEnable) {
-    mem(pReg.address) := pReg.in
+  when(io.in.writeEnable) {
+    mem(io.in.address) := io.in.in
     when(conf.debugMem.B) {
-      printf("[MEM] MemWrite Mem[0x%x] <= Data:0x%x\n", pReg.address, pReg.in)
+      printf("[MEM] MemWrite Mem[0x%x] <= Data:0x%x\n", io.in.address, io.in.in)
     }
-    io.out := pReg.in
-  }.otherwise {
-    io.out := mem(pReg.address)
   }
+  io.out := mem(io.in.in)
 }

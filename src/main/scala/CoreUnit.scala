@@ -18,7 +18,7 @@ import chisel3._
 
 class CoreUnitPort(implicit val conf:CAHPConfig) extends Bundle {
   val romData = Input(UInt(64.W))
-  val romAddr = Output(UInt(conf.romAddrWidth.W))
+  val romAddr = Output(UInt((conf.romAddrWidth-3).W))
   val memA = Flipped(new MemPort())
   val memB = Flipped(new MemPort())
 
