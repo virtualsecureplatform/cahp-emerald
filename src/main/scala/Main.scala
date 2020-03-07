@@ -18,5 +18,6 @@ import chisel3._
 object Main extends App {
   implicit val conf = CAHPConfig()
   conf.test = true;
-  chisel3.Driver.execute(args, () => new Mux4bit)
+  chisel3.Driver.execute(args, () => new VSPCoreNoRAMROM)
+  chisel3.Driver.execute(args, () => new VSPCoreNoROM)
 }

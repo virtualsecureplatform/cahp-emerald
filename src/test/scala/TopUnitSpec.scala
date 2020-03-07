@@ -33,7 +33,7 @@ class TopUnitSpec() extends ChiselFlatSpec {
 
   val testDir = new File("src/test/binary/")
   testDir.listFiles().foreach { f =>
-    if (f.getName().contains(".bin")) {
+    if (f.getName().contains("0002-fib.bin")) {
       println(f.getName())
       val parser = new TestBinParser(f.getAbsolutePath())
       conf.testRom = parser.romSeq

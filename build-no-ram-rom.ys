@@ -1,0 +1,23 @@
+# read design 
+read_verilog VSPCoreNoRAMROM.v
+
+# elaborate design hierarchy
+hierarchy -check -top VSPCoreNoRAMROM
+
+# the high-level stuff
+proc; opt; fsm; opt; memory; opt
+
+# mapping to internal cell library
+techmap; opt
+
+#To make easy to parse for V2TT
+flatten;
+
+# mapping logic to gates.
+abc -g gates,MUX
+
+# cleanup
+clean -purge
+
+# write synthesized design
+write_json vsp-core-no-ram-rom.json

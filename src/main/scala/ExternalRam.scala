@@ -27,5 +27,5 @@ class ExternalRam(val load:Boolean, val fileName:String)(implicit val conf:CAHPC
       printf("[MEM] MemWrite Mem[0x%x] <= Data:0x%x\n", io.in.address, io.in.in)
     }
   }
-  io.out := mem(io.in.in)
+  io.out := mem(io.in.address)
 }
