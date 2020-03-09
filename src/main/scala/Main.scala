@@ -19,5 +19,5 @@ object Main extends App {
   implicit val conf = CAHPConfig()
   conf.test = true;
   chisel3.Driver.execute(args, () => new VSPCoreNoRAMROM)
-  chisel3.Driver.execute(args, () => new VSPCoreNoROM)
+  chisel3.Driver.execute(args, () => new VSPCoreNoOM)
 }

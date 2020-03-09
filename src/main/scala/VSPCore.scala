@@ -68,13 +68,22 @@ class VSPCoreTest(implicit val conf:CAHPConfig) extends Module {
   io.regOut := vspCore.io.regOut
 }
 
+class CoreMemPort extends Bundle {
+  val in = Input(UInt(8.W))
+  val address = Input(UInt(8.W))
+  val writeEnable = Input(Bool())
+  val out = Output(UInt(8.W))
+
+  override def cloneType: this.type = new CoreMemPort().asInstanceOf[this.type]
+}
+
 class VSPCoreNoRAMROM extends Module {
   implicit val conf = CAHPConfig()
   conf.test = true
   conf.load = false
   val io = IO(new Bundle{
-    val memA = Flipped(new MemPort())
-    val memB = Flipped(new MemPort())
+    val memA = Flipped(new CoreMemPort)
+    val memB = Flipped(new CoreMemPort)
     val romAddr = Output(UInt((conf.romAddrWidth-3).W))
     val romData = Input(UInt(64.W))
 
@@ -90,8 +99,13 @@ class VSPCoreNoRAMROM extends Module {
   coreUnit.io.romData := io.romData
   coreUnit.io.load := false.B
 
+  io.memA.address := coreUnit.io.memA.in.address
+  io.memA.in := coreUnit.io.memA.in.in
+  io.memA.writeEnable := coreUnit.io.memA.in.writeEnable
   coreUnit.io.memA.out := io.memA.out
+
+  io.memB.address := coreUnit.io.memB.in.address
+  io.memB.in := coreUnit.io.memB.in.in
+  io.memB.writeEnable := coreUnit.io.memB.in.writeEnable
   coreUnit.io.memB.out := io.memB.out
-  io.memA.in := coreUnit.io.memA.in
-  io.memB.in := coreUnit.io.memB.in
 }
