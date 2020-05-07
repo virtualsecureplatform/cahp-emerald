@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import chisel3._
+import chisel3._
+import chisel3.util.Cat
 
 object Main extends App {
   implicit val conf = CAHPConfig()
+  implicit val ramConf = RAMConfig()
   conf.test = true;
   chisel3.Driver.execute(args, () => new VSPCoreNoRAMROM)
-  chisel3.Driver.execute(args, () => new VSPCoreNoROM)
+  chisel3.Driver.execute(args, () => new RAMWithDebugPort())
 }
